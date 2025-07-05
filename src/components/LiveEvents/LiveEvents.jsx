@@ -24,7 +24,7 @@ const LiveEvents = ({ location, date ,userid}) => {
     try {
       setError("");
       setLoading(true);
-      const response = await axios.get("https://smart-travel-companion-backend.onrender.com/live-events", {
+      const response = await axios.get("/api/live-events", {
         params: { location, date },
       });
       setEvents(response.data);
@@ -40,7 +40,7 @@ const LiveEvents = ({ location, date ,userid}) => {
     if (!userid?.userid) return;
 
     try {
-      const response = await axios.get(`https://smart-travel-companion-backend.onrender.com/saved-events/${userid.userid}`);
+      const response = await axios.get(`/api/saved-events/${userid.userid}`);
       const savedIds = new Set(response.data.map((event) => event.eventId));
       setSavedEvents(savedIds);
     } catch (error) {
@@ -81,14 +81,14 @@ const LiveEvents = ({ location, date ,userid}) => {
     const eventId = event.id;
     try {
       if (savedEvents.has(eventId)) {
-        await axios.post("https://smart-travel-companion-backend.onrender.com/delete-event", { userid, eventId });
+        await axios.post("/api/delete-event", { userid, eventId });
         setSavedEvents((prev) => {
           const updatedSet = new Set(prev);
           updatedSet.delete(eventId);
           return updatedSet;
         });
       } else {
-        await axios.post("https://smart-travel-companion-backend.onrender.com/save-event", {
+        await axios.post("/api/save-event", {
           userid,
           eventId: event.id,
           name: event.name || "Unknown Event",

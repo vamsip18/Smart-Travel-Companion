@@ -3,24 +3,24 @@ import "./WeatherInfo.css";
 import { API_KEY } from "../../../config";
 
 const WeatherInfo = ({ location, date }) => {
-  const [error, setError] = useState(false);
   const [weatherData, setWeatherData] = useState(null);
   const [forecastData, setForecastData] = useState([]);
   const [unit, setUnit] = useState("metric");
+  const [error, setError] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
 
-  const dayName = new Date(date).toLocaleDateString("en-US", { weekday: "long" });
   const formattedDate = new Date(date).toLocaleDateString("en-US", {
+    weekday: "long",
     day: "numeric",
     month: "long",
     year: "numeric",
   });
+
   const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   const todayIndex = new Date(date).getDay();
 
   useEffect(() => {
     if (location && date) {
-      console.log("Location passed to WeatherInfo:", location);
       fetchWeatherData(location, date);
     }
   }, [location, date, unit]);
@@ -28,8 +28,6 @@ const WeatherInfo = ({ location, date }) => {
   const fetchWeatherData = async (city, date) => {
     try {
       setError(false);
-
-      // Trim input and handle Visakhapatnam case
       const trimmedCity = city.trim();
       const formattedCity =
         trimmedCity.toLowerCase() === "visakhapatnam" ? "Visakhapatnam,IN" : trimmedCity;
@@ -39,48 +37,45 @@ const WeatherInfo = ({ location, date }) => {
       );
 
       const data = await response.json();
-      console.log("Weather API Response:", data);
 
       if (data.cod !== 200) {
-        console.error("City not found or invalid date!");
         setError(true);
         return;
       }
 
       setWeatherData(data);
       fetchForecastData(data.coord.lat, data.coord.lon, date);
-    } catch (error) {
-      console.error("Error fetching weather data:", error);
+    } catch (err) {
+      console.error("Error fetching weather:", err);
       setError(true);
     }
   };
 
   const fetchForecastData = async (lat, lon, date) => {
     try {
-      const response = await fetch(
+      const res = await fetch(
         `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=${unit}`
       );
-      const data = await response.json();
+      const data = await res.json();
 
       const targetDate = new Date(date).toISOString().split("T")[0];
-      const filteredData = data.list.filter((item) => {
-        const itemDate = item.dt_txt.split(" ")[0];
-        return itemDate >= targetDate;
-      });
+      const filtered = data.list.filter((item) =>
+        item.dt_txt.startsWith(targetDate)
+      );
 
       const uniqueDays = [];
-      const next4DaysData = filteredData.filter((item) => {
-        const itemDate = new Date(item.dt_txt).getDate();
-        if (!uniqueDays.includes(itemDate)) {
-          uniqueDays.push(itemDate);
+      const nextDays = data.list.filter((item) => {
+        const itemDay = new Date(item.dt_txt).getDate();
+        if (!uniqueDays.includes(itemDay)) {
+          uniqueDays.push(itemDay);
           return true;
         }
         return false;
       });
 
-      setForecastData(next4DaysData.slice(1, 5));
-    } catch (error) {
-      console.error("Error fetching forecast data:", error);
+      setForecastData(nextDays.slice(1, 5));
+    } catch (err) {
+      console.error("Error fetching forecast:", err);
       setError(true);
     }
   };
@@ -88,10 +83,12 @@ const WeatherInfo = ({ location, date }) => {
   const speakWeather = () => {
     if (weatherData && !isSpeaking) {
       const synth = window.speechSynthesis;
-      const description = `The weather in ${weatherData.name} is ${Math.round(weatherData.main.temp)} degrees ${
+      const temp = Math.round(weatherData.main.temp);
+      const desc = weatherData.weather[0].description;
+      const speech = `The weather in ${weatherData.name} is ${temp} degrees ${
         unit === "metric" ? "Celsius" : "Fahrenheit"
-      } with ${weatherData.weather[0].description}`;
-      const utterance = new SpeechSynthesisUtterance(description);
+      } with ${desc}.`;
+      const utterance = new SpeechSynthesisUtterance(speech);
       setIsSpeaking(true);
       synth.speak(utterance);
       utterance.onend = () => setIsSpeaking(false);
@@ -107,18 +104,19 @@ const WeatherInfo = ({ location, date }) => {
   return (
     <>
       {location && <h1 style={{ paddingTop: "20px" }}>Weather Information</h1>}
+
       {error && (
         <p style={{ color: "red", textAlign: "center" }}>
-          Error fetching weather data. Please provide a valid location or date.
+          Error fetching weather. Please check the location or try again later.
         </p>
       )}
 
       {!error && weatherData ? (
         <div className={`WeatherInfo ${weatherData.weather[0].main.toLowerCase()}`}>
           <div className="ForecastBox">
+            {/* LEFT SIDE */}
             <div className="left-section">
-              <h2 className="day">{dayName}</h2>
-              <span className="date">{formattedDate}</span>
+              <h2 className="day">{formattedDate}</h2>
               <img
                 src={`https://openweathermap.org/img/wn/${weatherData.weather[0].icon}@4x.png`}
                 alt="weather-icon"
@@ -137,6 +135,7 @@ const WeatherInfo = ({ location, date }) => {
               </button>
             </div>
 
+            {/* RIGHT SIDE */}
             <div className="right-section">
               <div className="info-box">
                 <span className="label">City</span>
@@ -161,21 +160,20 @@ const WeatherInfo = ({ location, date }) => {
               </div>
 
               <div className="forecast-box">
-                {forecastData.map((item, index) => {
+                {forecastData.map((item, idx) => {
                   const day = new Date(item.dt_txt).getDay();
                   return (
                     <div
-                      key={index}
+                      key={idx}
                       className={`forecast-item ${day === todayIndex ? "active" : ""}`}
                     >
                       <img
                         src={`https://openweathermap.org/img/wn/${item.weather[0].icon}@2x.png`}
-                        alt="weather"
+                        alt="forecast-icon"
                       />
                       <span className="forecast-day">{days[day]}</span>
                       <p className="forecast-temp">
-                        {Math.round(item.main.temp)}
-                        {getTempUnit()}
+                        {Math.round(item.main.temp)} {getTempUnit()}
                       </p>
                     </div>
                   );
@@ -184,9 +182,9 @@ const WeatherInfo = ({ location, date }) => {
             </div>
           </div>
         </div>
-      ) : (
-        <p>Loading weather data...</p>
-      )}
+      ) : !error ? (
+        <p style={{ textAlign: "center" }}>Loading weather data...</p>
+      ) : null}
     </>
   );
 };

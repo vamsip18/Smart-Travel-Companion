@@ -4,6 +4,8 @@ import FavoriteIcon from "@mui/icons-material/Favorite";
 import ShareIcon from "@mui/icons-material/Share";
 import { useNavigate } from "react-router-dom";
 
+const BASE_URL = "/api";
+
 const Temples = ({ location, userid }) => {
   const [religiousSites, setReligiousSites] = useState([]);
   const [savedSites, setSavedSites] = useState(new Set());
@@ -17,12 +19,11 @@ const Temples = ({ location, userid }) => {
     setError("");
 
     axios
-      .get("https://smart-travel-companion-backend.onrender.com/religious-sites", {
+      .get(`${BASE_URL}/religious-sites`, {
         params: { location },
       })
       .then((response) => {
         setReligiousSites(response.data);
-        // console.log(response.data);
         setLoading(false);
       })
       .catch((error) => {
@@ -37,9 +38,7 @@ const Temples = ({ location, userid }) => {
       if (!userid?.userid) return;
 
       try {
-        const response = await axios.get(
-          `https://smart-travel-companion-backend.onrender.com/saved-sites/${userid.userid}`
-        );
+        const response = await axios.get(`${BASE_URL}/saved-sites/${userid.userid}`);
         const savedIds = new Set(response.data.map((site) => site.site_id));
         setSavedSites(savedIds);
       } catch (error) {
@@ -65,7 +64,7 @@ const Temples = ({ location, userid }) => {
 
     try {
       if (savedSites.has(siteId)) {
-        await axios.post("https://smart-travel-companion-backend.onrender.com/delete-site", {
+        await axios.post(`${BASE_URL}/delete-site`, {
           userId: userid.userid,
           siteId: siteId,
         });
@@ -75,7 +74,7 @@ const Temples = ({ location, userid }) => {
           return updated;
         });
       } else {
-        await axios.post("https://smart-travel-companion-backend.onrender.com/save-site", {
+        await axios.post(`${BASE_URL}/save-site`, {
           userId: userid.userid,
           siteId: siteId,
           name: site.name || "Unnamed Site",
@@ -216,7 +215,6 @@ const Temples = ({ location, userid }) => {
                   Directions
                 </button>
 
-                
                 <button
                   style={{
                     padding: "5px 10px",
@@ -251,7 +249,6 @@ const Temples = ({ location, userid }) => {
                 >
                   <FavoriteIcon />
                 </button>
-
               </div>
             </div>
           );

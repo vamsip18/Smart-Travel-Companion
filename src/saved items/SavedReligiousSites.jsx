@@ -14,7 +14,7 @@ const SavedReligiousSites = () => {
 
     const fetchSavedSites = async () => {
       try {
-        const userRes = await axios.get("https://smart-travel-companion-backend.onrender.com/get-user-id", {
+        const userRes = await axios.get("/api/get-user-id", {
           params: { email: user.email },
         });
         const userId = userRes.data.userId;
