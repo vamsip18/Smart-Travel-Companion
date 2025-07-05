@@ -23,7 +23,7 @@ import tajMahal from "../Assests/images/signin/Tajmahal.png";
 import airplane from "../Assests/images/signin/Airplane.png";
 import monuments from "../Assests/images/signin/Monuments.png";
 
-const API_URL = "/api";
+const API_URL = "https://smart-travel-companion-backend.onrender.com";
 
 const SignIn = ({ handleLogin }) => {
   const { login } = useAuth();

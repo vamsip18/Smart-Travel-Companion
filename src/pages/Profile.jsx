@@ -20,7 +20,7 @@ const Profile = () => {
   const fetchUserDetails = async () => {
     if (!user?.email) return;
     try {
-      const response = await axios.get("/api/get-user-details", {
+      const response = await axios.get("https://smart-travel-companion-backend.onrender.com/get-user-details", {
         params: { email: user.email },
       });
       setUserData(response.data);

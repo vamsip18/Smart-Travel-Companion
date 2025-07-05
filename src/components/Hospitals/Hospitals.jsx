@@ -5,8 +5,7 @@ import ShareIcon from "@mui/icons-material/Share";
 import { useNavigate } from "react-router-dom";
 
 // Define base URL based on environment
-// Use relative path to Vercel serverless backend
-const BASE_URL = "/api";
+const BASE_URL ="https://smart-travel-companion-backend.onrender.com";
 
 const Hospitals = ({ location, type, userid }) => {
   const [services, setServices] = useState([]);

@@ -4,8 +4,8 @@ import { useNavigate } from "react-router-dom";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import ShareIcon from "@mui/icons-material/Share";
 
-// Use relative path for Vercel proxy support
-const BASE_URL = "/api";
+// Define base URL based on environment
+const BASE_URL ="https://smart-travel-companion-backend.onrender.com";
 
 const TopRestaurants = ({ location, userid }) => {
   const [restaurants, setRestaurants] = useState([]);
@@ -15,41 +15,55 @@ const TopRestaurants = ({ location, userid }) => {
   const budget = 2;
   const navigate = useNavigate();
 
+  // Fetch nearby restaurants
   useEffect(() => {
     if (!location) {
+      console.log("Location is empty or undefined");
       setError("Please provide a valid location.");
       return;
     }
 
+    console.log("Fetching restaurants for location:", location);
+
+    // Debounce fetch to prevent rapid API calls
     const debounceFetch = setTimeout(() => {
       setLoading(true);
       setError("");
 
       axios
-        .get(`${BASE_URL}/restaurants`, { params: { location, budget } })
-        .then((response) => setRestaurants(response.data))
+        .get(`${BASE_URL}/restaurants`, {
+          params: { location, budget },
+        })
+        .then((response) => {
+          setRestaurants(response.data);
+        })
         .catch((error) => {
           console.error("Error fetching restaurants:", error);
-          setError(
+          const errorMessage =
             error.response?.data?.details ||
-              "Failed to load restaurants. Please try again later."
-          );
+            "Failed to load restaurants. Please try again later.";
+          setError(errorMessage);
         })
-        .finally(() => setLoading(false));
-    }, 500);
+        .finally(() => {
+          setLoading(false);
+        });
+    }, 500); // 500ms debounce
 
     return () => clearTimeout(debounceFetch);
   }, [location, budget]);
 
+  // Fetch saved restaurant IDs for the user
   useEffect(() => {
-    if (!userid?.userid) return;
-
     const fetchSavedRestaurants = async () => {
+      if (!userid?.userid) return;
+
       try {
         const response = await axios.get(
           `${BASE_URL}/saved-restaurants/${userid.userid}`
         );
-        const savedIds = new Set(response.data.map((r) => String(r.restaurant_id)));
+        const savedIds = new Set(
+          response.data.map((r) => String(r.restaurant_id))
+        );
         setSavedRestaurants(savedIds);
       } catch (error) {
         console.error("Error fetching saved restaurants:", error);
@@ -179,7 +193,9 @@ const TopRestaurants = ({ location, userid }) => {
                 }}
               />
               <h3>{restaurant.name}</h3>
-              <p>{restaurant.location?.formatted_address || "No address available"}</p>
+              <p>
+                {restaurant.location?.formatted_address || "No address available"}
+              </p>
 
               <div
                 style={{
