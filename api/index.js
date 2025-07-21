@@ -19,20 +19,49 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 8000;
 
-// Database connection
-const db = mysql.createConnection({
-  host: "sql8.freesqldatabase.com",
-  user: "sql8788368",
-  password: "R9G1mXWPK6",
-  database: "sql8788368",
-});
+// Primary DB (FreeSQL)
+let db = mysql.createConnection({
+      host: "sql5.freesqldatabase.com",
+      user: "sql5790350",
+      password: "mqQbnl6pw8",
+      database: "sql5790350",
+    });
+    
 
-// Connect to the database
+
+// Attempt primary connection
 db.connect((err) => {
   if (err) {
-    console.error("Database connection failed:", err);
+    console.error("Primary DB connection failed. Trying secondary DB...");
+
+    // Fallback DB ()
+    db = mysql.createConnection({
+      host: "hopper.proxy.rlwy.net",
+      port: 43452,
+      user: "root",
+      password: "uslOf lbfSzuTUDYRmPMslEYGChevPVRw",
+      database: "railway",
+      multipleStatements: true,
+    });
+
+
+    // db = mysql.createConnection({
+    //   host: "185.27.134.143",
+    //   port: 3306,
+    //   user: "if0_39485960",
+    //   password: "srvagaaf",
+    //   database: "if0_39485960_travel",
+    // });
+
+    db.connect((fallbackErr) => {
+      if (fallbackErr) {
+        console.error("Secondary DB connection failed:", fallbackErr);
+      } else {
+        console.log("Connected to secondary MySQL database (Railway)");
+      }
+    });
   } else {
-    console.log("Connected to MySQL Database");
+    console.log("Connected to primary MySQL database (FreeSQL)");
   }
 });
 
@@ -43,6 +72,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(
   cors({
     origin: [
+      "https://smart-travel-companion.vercel.app",
       "https://smart-travel-companion-backend.onrender.com",
       "http://localhost:5173",
       "http://localhost:8000",
@@ -1041,22 +1071,96 @@ app.get("/:type", async (req, res) => {
 });
 
 // Create users table
-db.query(
-  `CREATE TABLE IF NOT EXISTS users (
-    id VARCHAR(255) PRIMARY KEY,
-    fullname VARCHAR(255) NOT NULL,
-    email VARCHAR(255) UNIQUE NOT NULL,
-    phone VARCHAR(15) NOT NULL,
-    password VARCHAR(255) NOT NULL
-  )`,
-  (err) => {
-    if (err) {
-      console.error("Error creating 'users' table:", err.message);
-    } else {
-      console.log("users table is ready");
-    }
-  }
+const createTablesSQL = `
+CREATE TABLE IF NOT EXISTS users (
+  id VARCHAR(255) PRIMARY KEY,
+  fullname VARCHAR(255) NOT NULL,
+  email VARCHAR(255) UNIQUE NOT NULL,
+  phone VARCHAR(15) NOT NULL,
+  password VARCHAR(255) NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS saved_restaurants (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id VARCHAR(255) NOT NULL,
+  restaurant_id VARCHAR(255) NOT NULL,
+  name VARCHAR(255) NOT NULL,
+  address TEXT,
+  photo TEXT,
+  latitude DECIMAL(10, 8),
+  longitude DECIMAL(11, 8),
+  saved_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS saved_hospitals (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id VARCHAR(255) NOT NULL,
+  hospital_id VARCHAR(255) NOT NULL,
+  name VARCHAR(255) NOT NULL,
+  address TEXT,
+  photo TEXT,
+  latitude DECIMAL(10, 8),
+  longitude DECIMAL(11, 8),
+  saved_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS saved_places (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id VARCHAR(255) NOT NULL,
+  place_id VARCHAR(255) NOT NULL,
+  name VARCHAR(255),
+  address TEXT,
+  latitude DECIMAL(10, 6),
+  longitude DECIMAL(10, 6),
+  image TEXT,
+  UNIQUE KEY unique_place (user_id, place_id),
+  saved_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS saved_sites (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id VARCHAR(255) NOT NULL,
+  site_id VARCHAR(255) NOT NULL,
+  name VARCHAR(255),
+  address VARCHAR(255),
+  photo VARCHAR(500),
+  latitude DECIMAL(10, 8),
+  longitude DECIMAL(11, 8),
+  UNIQUE KEY unique_site (user_id, site_id),
+  saved_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS saved_events (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id VARCHAR(255) NOT NULL,
+  event_id VARCHAR(255) NOT NULL,
+  name VARCHAR(255) NOT NULL,
+  venue VARCHAR(255) NOT NULL,
+  city VARCHAR(255) NOT NULL,
+  country VARCHAR(255) NOT NULL,
+  date DATE NOT NULL,
+  time VARCHAR(50),
+  latitude DECIMAL(9,6) NOT NULL,
+  longitude DECIMAL(9,6) NOT NULL,
+  image TEXT,
+  url TEXT,
+  saved_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+`;
+
+// db.query(createTablesSQL, (err) => {
+//   if (err) {
+//     console.error("Error creating tables:", err.message);
+//   } else {
+//     console.log("All tables created successfully");
+//   }
+// });
+
 
 // Register endpoint
 app.post("/register", async (req, res) => {

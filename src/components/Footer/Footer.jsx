@@ -26,7 +26,7 @@ const Footer = () => {
         <div className="footer-section contact">
           <h3>Contact</h3>
           <p><LocationOn />GMR Institute of Technology</p>
-          <p><Phone /> +98 7651 2340</p>
+          <p><Phone /> +83 7463 6692</p>
           <p><Mail /> sruthiedu19@gmail.com</p>
         </div>
 

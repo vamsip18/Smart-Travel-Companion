@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import VideoSlider from "../components/videoslider/videoSlider";
+import VideoSlider from "../components/videoslider/videoslider";
 import Middle from "../components/Middle/Middle";
 import Destinations from "../components/Destinations/Destinations";
 import TabSection from "../components/TabSection/TabSection";

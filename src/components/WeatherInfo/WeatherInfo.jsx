@@ -6,7 +6,7 @@ const WeatherInfo = ({ location, date }) => {
   const [error, setError] = useState(false);
   const [weatherData, setWeatherData] = useState(null);
   const [forecastData, setForecastData] = useState([]);
-  const [unit, setUnit] = useState("metric");
+  const [unit, setUnit] = useState("metric"); // "imperial" for °F
   const [isSpeaking, setIsSpeaking] = useState(false);
 
   const dayName = new Date(date).toLocaleDateString("en-US", { weekday: "long" });
@@ -20,7 +20,6 @@ const WeatherInfo = ({ location, date }) => {
 
   useEffect(() => {
     if (location && date) {
-      console.log("Location passed to WeatherInfo:", location);
       fetchWeatherData(location, date);
     }
   }, [location, date, unit]);
@@ -28,18 +27,10 @@ const WeatherInfo = ({ location, date }) => {
   const fetchWeatherData = async (city, date) => {
     try {
       setError(false);
-
-      // Trim input and handle Visakhapatnam case
-      const trimmedCity = city.trim();
-      const formattedCity =
-        trimmedCity.toLowerCase() === "visakhapatnam" ? "Visakhapatnam,IN" : trimmedCity;
-
       const response = await fetch(
-        `https://api.openweathermap.org/data/2.5/weather?q=${formattedCity}&appid=${API_KEY}&units=${unit}`
+        `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}&units=${unit}`
       );
-
       const data = await response.json();
-      console.log("Weather API Response:", data);
 
       if (data.cod !== 200) {
         console.error("City not found or invalid date!");
@@ -106,7 +97,7 @@ const WeatherInfo = ({ location, date }) => {
 
   return (
     <>
-      {location && <h1 style={{ paddingTop: "20px" }}>Weather Information</h1>}
+      {location && <h1>Weather Information</h1>}
       {error && (
         <p style={{ color: "red", textAlign: "center" }}>
           Error fetching weather data. Please provide a valid location or date.
@@ -125,8 +116,7 @@ const WeatherInfo = ({ location, date }) => {
                 className="weather-icon"
               />
               <h2 className="temp">
-                {Math.round(weatherData.main.temp)}
-                {getTempUnit()}
+                {Math.round(weatherData.main.temp)}{getTempUnit()}
               </h2>
               <h3 className="cloud">{weatherData.weather[0].description}</h3>
               <button className="btn" onClick={speakWeather}>
@@ -145,8 +135,7 @@ const WeatherInfo = ({ location, date }) => {
               <div className="info-box">
                 <span className="label">Temperature</span>
                 <span className="value">
-                  {Math.round(weatherData.main.temp)}
-                  {getTempUnit()}
+                  {Math.round(weatherData.main.temp)}{getTempUnit()}
                 </span>
               </div>
               <div className="info-box">
@@ -155,9 +144,7 @@ const WeatherInfo = ({ location, date }) => {
               </div>
               <div className="info-box">
                 <span className="label">Wind Speed</span>
-                <span className="value">
-                  {weatherData.wind.speed} {unit === "metric" ? "Km/h" : "mph"}
-                </span>
+                <span className="value">{weatherData.wind.speed} {unit === "metric" ? "Km/h" : "mph"}</span>
               </div>
 
               <div className="forecast-box">
@@ -174,8 +161,7 @@ const WeatherInfo = ({ location, date }) => {
                       />
                       <span className="forecast-day">{days[day]}</span>
                       <p className="forecast-temp">
-                        {Math.round(item.main.temp)}
-                        {getTempUnit()}
+                        {Math.round(item.main.temp)}{getTempUnit()}
                       </p>
                     </div>
                   );

@@ -1,39 +1,50 @@
 .feature-section {
-    padding: 40px 0px;
-    overflow: hidden;
+  padding: 40px 0;
+  overflow: hidden;
 }
 
-.feature-section .slick-active {
-    border: none !important;
+.feature-card-wrapper {
+  padding: 10px;
 }
 
-.feature-section .card {
-    border: none !important;
-    box-shadow: none; /* Ensure no box-shadow that looks like a border */
-    outline: none;     /* Remove any focus outlines */
-    text-align: center;
-    padding: 0px 14px;
-    margin-bottom: 14px;
-    background-color: transparent; /* Optional: remove any background if needed */
+.feature-card {
+  border: none;
+  background: transparent;
+  text-align: center;
 }
 
-.feature-section .card img {
-    width: 75px;
-    margin: 0 auto 14px;
+.feature-card img {
+  width: 70px;
+  margin: 0 auto 12px;
 }
 
-.feature-section .card .card-title {
-    font-size: var(--subTitle);
-    padding: 12px 0;
-    font-weight: bold;
+.feature-card .card-title {
+  font-size: var(--subTitle);
+  font-weight: bold;
+  margin-bottom: 10px;
 }
 
-.feature-section .card .card-text {
-    font-size: var(--bodyText);
-    line-height: 22px;
-    color: var(--textclr);
+.feature-card .card-text {
+  font-size: var(--bodyText);
+  color: var(--textclr);
+  line-height: 22px;
 }
 
-.feature-section .card:hover .card-title {
-    color: var(--primaryClr);
+.feature-card:hover .card-title {
+  color: var(--primaryClr);
+}
+
+/* Mobile Adjustments */
+@media (max-width: 576px) {
+  .feature-card img {
+    width: 60px;
+  }
+
+  .feature-card .card-title {
+    font-size: 16px;
+  }
+
+  .feature-card .card-text {
+    font-size: 14px;
+  }
 }

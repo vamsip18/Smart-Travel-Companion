@@ -97,7 +97,7 @@ const Contact = () => {
                   <Card.Title className="fw-bold h5">Call Us</Card.Title>
                   <p className="text-muted">Get in touch via phone for support.</p>
                   <Button variant="light" size="sm" href="#contact">
-                    <i className="bi bi-telephone me-1"></i> +98 7651 2340
+                    <i className="bi bi-telephone me-1"></i> +83 7463 6692
                   </Button>
                 </Card.Body>
               </Card>

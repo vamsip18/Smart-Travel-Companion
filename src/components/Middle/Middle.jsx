@@ -5,57 +5,50 @@ import feature1 from "../../Assests/images/feature/beach-umbrella.png";
 import feature2 from "../../Assests/images/feature/deal.png";
 import feature3 from "../../Assests/images/feature/location.png";
 import feature4 from "../../Assests/images/feature/medal.png";
+
 import { Card, Col, Container, Row } from "react-bootstrap";
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 
-
 const Features = () => {
-  var settings = {
+  const settings = {
     dots: false,
     infinite: true,
-    autoplay:false,
-    autoplaySpeed:1500,
+    autoplay: false,
     slidesToShow: 4,
     slidesToScroll: 1,
-    
     responsive: [
       {
-        breakpoint: 1024,
+        breakpoint: 1200,
         settings: {
           slidesToShow: 4,
           slidesToScroll: 1,
-          infinite: false,
-          dots: true,
         },
       },
       {
         breakpoint: 991,
         settings: {
           slidesToShow: 3,
-          slidesToScroll: 3,
-          infinite: false,
-          dots: true,
+          slidesToScroll: 1,
         },
       },
       {
-        breakpoint: 600,
+        breakpoint: 768,
         settings: {
           slidesToShow: 2,
-          slidesToScroll: 2,
+          slidesToScroll: 1,
+          arrows: false,
           autoplay: true,
-          prevArrow:false,
-          nextArrow:false,
         },
       },
       {
-        breakpoint: 480,
+        breakpoint: 576,
         settings: {
           slidesToShow: 1,
           slidesToScroll: 1,
-          prevArrow:false,
-          nextArrow:false,
+          arrows: false,
+          autoplay: true,
         },
       },
     ],
@@ -77,10 +70,9 @@ const Features = () => {
     {
       id: 2,
       image: feature3,
-      title: "Exploring made easyt",
-      des: "Book last minute, skip lines &amp; get free cancellation for easier exploring.",
+      title: "Exploring made easy",
+      des: "Book last minute, skip lines & get free cancellation for easier exploring.",
     },
-
     {
       id: 3,
       image: feature4,
@@ -90,33 +82,32 @@ const Features = () => {
   ];
 
   return (
-    <>
-    
-      <section className="feature-section">
-        <Container>
-          <Row>
-            <Col md="12">
-              <Slider {...settings}>
-                {featureList.map((feature, inx) => {
-                  return (
-                    <Card key={inx}>
-                      <Card.Img
-                        variant="top"
-                        src={feature.image}
-                        className="img-fluid"
-                        alt={feature.title}
-                      />
+    <section className="feature-section">
+      <Container fluid>
+        <Row>
+          <Col xs={12}>
+            <Slider {...settings}>
+              {featureList.map((feature) => (
+                <div key={feature.id} className="feature-card-wrapper">
+                  <Card className="feature-card">
+                    <Card.Img
+                      variant="top"
+                      src={feature.image}
+                      className="img-fluid"
+                      alt={feature.title}
+                    />
+                    <Card.Body>
                       <Card.Title>{feature.title}</Card.Title>
                       <Card.Text>{feature.des}</Card.Text>
-                    </Card>
-                  );
-                })}
-              </Slider>
-            </Col>
-          </Row>
-        </Container>
-      </section>
-    </>
+                    </Card.Body>
+                  </Card>
+                </div>
+              ))}
+            </Slider>
+          </Col>
+        </Row>
+      </Container>
+    </section>
   );
 };
 

@@ -1,4 +1,4 @@
-.video-slider {
+/* .video-slider {
   width: 100%;
   height: 100%;
   position: relative;
@@ -8,7 +8,7 @@
   position: relative;
   width: 100%;
   height: 80vh; /* Full screen height for better centering */
-  display: flex;
+  /* display: flex;
   justify-content: center;
   align-items: center;
   overflow: hidden;
@@ -20,26 +20,26 @@
   left: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  object-position: center center; /* Ensures video is centered */
-  z-index: 1;
+  object-fit: cover; */
+  /* object-position: center center; Ensures video is centered */
+  /* z-index: 1;
 }
 
 
 
 
 /* Optional: Dot styling */
-.slick-dots {
+/* .slick-dots {
   bottom: 20px;
 }
 
 .slick-dots li button:before {
   color: white;
   font-size: 10px;
-}
+} */
 
 /* Custom arrows */
-.custom-arrow {
+/* .custom-arrow {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
@@ -47,16 +47,16 @@
   z-index: 3;
   cursor: pointer;
   color: white;
-}
+} */
 
 /* Hide the default slick arrows */
-.slick-prev:before,
+/* .slick-prev:before,
 .slick-next:before {
   display: none;
-}
+} */
 
 /* Optional: Style your custom arrows */
-.custom-arrow {
+/* .custom-arrow {
   font-size: 2rem;
   color: white;
   z-index: 10;
@@ -75,4 +75,103 @@
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
+} */ 
+
+
+.video-slider {
+  width: 100%;
+  position: relative;
+}
+
+/* Each slide covers full width and keeps responsive height */
+.slide {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+/* Video styling for responsiveness */
+.slider-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+}
+
+/* Custom arrows */
+.custom-arrow {
+  font-size: 2.5rem;
+  color: white;
+  z-index: 10;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  user-select: none;
+}
+
+.prev-arrow {
+  left: 20px;
+}
+
+.next-arrow {
+  right: 20px;
+}
+
+/* Hide default slick arrows */
+.slick-prev:before,
+.slick-next:before {
+  display: none;
+}
+
+/* Dots customization */
+.slick-dots {
+  bottom: 15px;
+  z-index: 11;
+}
+
+.slick-dots li button:before {
+  font-size: 10px;
+  color: white;
+  opacity: 0.7;
+}
+
+.slick-dots li.slick-active button:before {
+  opacity: 1;
+  color: #fff;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 1024px) {
+  .slide {
+    aspect-ratio: 16 / 9;
+  }
+}
+
+@media (max-width: 768px) {
+  .custom-arrow {
+    font-size: 2rem;
+  }
+
+  .slide {
+    aspect-ratio: 16 / 9;
+  }
+}
+
+@media (max-width: 480px) {
+  .custom-arrow {
+    font-size: 1.8rem;
+  }
+
+  .slick-dots li button:before {
+    font-size: 8px;
+  }
 }
