@@ -39,7 +39,7 @@ db.connect((err) => {
       host: "hopper.proxy.rlwy.net",
       port: 43452,
       user: "root",
-      password: "uslOf lbfSzuTUDYRmPMslEYGChevPVRw",
+      password: "uslOflbfSzuTUDYRmPMslEYGChevPVRw",
       database: "railway",
       multipleStatements: true,
     });
@@ -73,7 +73,7 @@ app.use(
   cors({
     origin: [
       "https://smart-travel-companion.vercel.app",
-      "https://smart-travel-companion-backend.onrender.com",
+      "https://smart-travel-companion-26cl.vercel.app",
       "http://localhost:5173",
       "http://localhost:8000",
       "https://smart-travel-companion-26cl.vercel.app/"
@@ -227,11 +227,10 @@ app.get("/get-user-id", (req, res) => {
 // GET user details by email
 app.get("/get-user-details", (req, res) => {
   const email = req.query.email;
-
   if (!email) {
     return res.status(400).json({ message: "Email is required" });
   }
-
+  console.log(email);
   const sql = "SELECT fullname, phone, created_at FROM users WHERE email = ?";
   db.query(sql, [email], (err, results) => {
     if (err) {
@@ -887,16 +886,20 @@ app.get("/tourist-places", async (req, res) => {
 // Fetch restaurants
 app.get("/restaurants", async (req, res) => {
   const { location, budget } = req.query;
+  console.log("FOURSQUARE_API_KEY:", process.env.FOURSQUARE_API_KEY);
+  console.log(location);
+  // console.log()
   if (!location) {
     return res.status(400).json({ error: "Location is required." });
   }
-
+  console.log(location);
   try {
     const { latitude, longitude } = await getCoordinates(location);
 
     const foursquareAPI = "https://api.foursquare.com/v3/places/search";
     const foursquarePhotoAPI = (venueId) =>
       `https://api.foursquare.com/v3/places/${venueId}/photos`;
+    
 
     const headers = {
       Accept: "application/json",

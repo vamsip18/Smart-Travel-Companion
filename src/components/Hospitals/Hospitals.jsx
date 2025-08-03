@@ -5,7 +5,7 @@ import ShareIcon from "@mui/icons-material/Share";
 import { useNavigate } from "react-router-dom";
 
 // Define base URL based on environment
-const BASE_URL ="https://smart-travel-companion-backend.onrender.com";
+const BASE_URL ="http://localhost:8000";
 
 const Hospitals = ({ location, type, userid }) => {
   const [services, setServices] = useState([]);
@@ -23,7 +23,7 @@ const Hospitals = ({ location, type, userid }) => {
       return;
     }
 
-    console.log("Fetching hospitals for location:", location);
+    // console.log("Fetching hospitals for location:", location);
 
     // Debounce fetch to prevent rapid API calls
     const debounceFetch = setTimeout(() => {

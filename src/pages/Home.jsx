@@ -7,7 +7,7 @@ import ContactCTA from "../components/ContactCTA/ContactCTA";
 
 
 const Home = (userid) => {
-  const defaultLocation = "Delhi"; // Default location
+  const defaultLocation = "New York"; // Default location
   const defaultDate = new Date().toISOString().split("T")[0]; // Default to today's date
 
   const [location, setLocation] = useState("");

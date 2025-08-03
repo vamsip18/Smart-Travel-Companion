@@ -16,16 +16,18 @@ const Profile = () => {
   const [editingField, setEditingField] = useState(null);
   const [fullName, setFullName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [created_at,setCreated_at]=useState("");
 
   const fetchUserDetails = async () => {
     if (!user?.email) return;
     try {
-      const response = await axios.get("https://smart-travel-companion-backend.onrender.com/get-user-details", {
+      const response = await axios.get("http://localhost:8000/get-user-details", {
         params: { email: user.email },
       });
       setUserData(response.data);
       setFullName(response.data.full_name || "");
       setPhoneNumber(response.data.phone_number || "");
+      setCreated_at(response.data.created_at || "")
     } catch (error) {
       console.error("Failed to fetch user details:", error);
     }
@@ -42,10 +44,11 @@ const Profile = () => {
 
   const handleUpdate = async () => {
     try {
-      await axios.put("https://smart-travel-companion-backend.onrender.com/update-user-details", {
+      await axios.put("http://localhost:8000/update-user-details", {
         email: user.email,
         full_name: fullName,
         phone_number: phoneNumber,
+        created_at:new Date().toISOString().split("T")[0], 
       });
       setEditingField(null);
       await fetchUserDetails();
@@ -184,10 +187,10 @@ const Profile = () => {
           </div>
 
           {/* Created At */}
-          <div style={{ marginBottom: "25px", fontSize: "20px" }}>
+          {/* <div style={{ marginBottom: "25px", fontSize: "20px" }}>
             <strong>🕒 Created At:</strong>{" "}
             <span style={{ marginLeft: "10px" }}>{formatDate(userData?.created_at)}</span>
-          </div>
+          </div> */}
         </div>
 
         {/* Right Side - Profile Image */}

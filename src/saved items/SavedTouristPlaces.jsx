@@ -14,14 +14,14 @@ const SavedTouristPlaces = () => {
 
     const fetchSavedTouristPlaces = async () => {
       try {
-        const userRes = await axios.get("https://smart-travel-companion-backend.onrender.com/get-user-id", {
+        const userRes = await axios.get("http://localhost:8000/get-user-id", {
           params: { email: user.email },
         });
         const userId = userRes.data.userId;
         if (!userId) return;
 
         const placesRes = await axios.get(
-          `https://smart-travel-companion-backend.onrender.com/saved-places/${userId}`
+          `http://localhost:8000/saved-places/${userId}`
         );
         setSavedPlaces(placesRes.data);
       } catch (err) {
@@ -52,11 +52,11 @@ const SavedTouristPlaces = () => {
 
   const unsavePlace = async (placeId) => {
     try {
-      const userRes = await axios.get("https://smart-travel-companion-backend.onrender.com/get-user-id", {
+      const userRes = await axios.get("http://localhost:8000/get-user-id", {
         params: { email: user.email },
       });
 
-      await axios.post("https://smart-travel-companion-backend.onrender.com/delete-place", {
+      await axios.post("http://localhost:8000/delete-place", {
         userId: userRes.data.userId,
         placeId,
       });

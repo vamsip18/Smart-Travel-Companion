@@ -65,7 +65,7 @@ const modules = [
     description: "Join live events, concerts, and cultural festivals happening around you.",
     images: [
       "https://images.pexels.com/photos/2747449/pexels-photo-2747449.jpeg?cs=srgb&dl=pexels-wolfgang-2747449.jpg&fm=jpg",
-      "https://tse1.mm.bing.net/th?id=OIP.Ex97I3uaWav54E-dB5F5BQHaE9&pid=Api&P=0&h=180",
+      "https://bloximages.newyork1.vip.townnews.com/carrollspaper.com/content/tncms/assets/v3/editorial/b/4e/b4e52960-276e-11ef-a942-4f3d27298271/66676d2ea249c.image.jpg?resize=960%2C500",
       "https://static.toiimg.com/photo/msid-80334120,width-96,height-65.cms",
       "https://philippinetourismusa.com/wp-content/uploads/2019/05/Sinulog-by-Robo-G.-Formacion-1200x857-1200x857.jpg",
       "https://tse3.mm.bing.net/th?id=OIP.uoPbBSz8YFLw52nzSzUwcgHaE7&pid=Api&P=0&h=180",
@@ -73,7 +73,7 @@ const modules = [
       "https://thebrownandwhite.com/wp-content/uploads/2022/10/221019ARTMARKET_3.jpg",
       "https://www.redsquaremedia.com.au/wp-content/uploads/2014/06/Live-event-photography-gallery.jpg",
       "https://d36tnp772eyphs.cloudfront.net/blogs/1/2018/09/Festival-in-Chiang-Mai-Thailand-1200x853.jpg",
-      "https://bloximages.newyork1.vip.townnews.com/carrollspaper.com/content/tncms/assets/v3/editorial/b/4e/b4e52960-276e-11ef-a942-4f3d27298271/66676d2ea249c.image.jpg?resize=960%2C500",
+      "https://media.istockphoto.com/id/1482843353/photo/backview-of-a-stylish-young-businessman-in-a-dark-crowded-auditorium-at-a-startup-summit.jpg?s=612x612&w=0&k=20&c=ar-3wiGLR7PTPbskl400Ksbs0m-jj56U6tGzd6oTKTM=",
       "https://tripjive.com/wp-content/uploads/2025/04/Flamands-cultural-events-1024x585.jpg",
       "https://asiasomeday.com/philippine/wp-content/uploads/sites/7/2020/04/dinagyang-festival-ililo.jpg",
     ]

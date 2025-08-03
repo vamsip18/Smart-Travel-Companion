@@ -14,14 +14,14 @@ const SavedReligiousSites = () => {
 
     const fetchSavedSites = async () => {
       try {
-        const userRes = await axios.get("https://smart-travel-companion-backend.onrender.com/get-user-id", {
+        const userRes = await axios.get("http://localhost:8000/get-user-id", {
           params: { email: user.email },
         });
         const userId = userRes.data.userId;
         if (!userId) return;
 
         const siteRes = await axios.get(
-          `https://smart-travel-companion-backend.onrender.com/saved-sites/${userId}`
+          `http://localhost:8000/saved-sites/${userId}`
         );
         setSavedSites(siteRes.data);
       } catch (err) {
@@ -52,11 +52,11 @@ const SavedReligiousSites = () => {
 
   const unsaveSite = async (siteId) => {
     try {
-      const userRes = await axios.get("https://smart-travel-companion-backend.onrender.com/get-user-id", {
+      const userRes = await axios.get("http://localhost:8000/get-user-id", {
         params: { email: user.email },
       });
 
-      await axios.post("https://smart-travel-companion-backend.onrender.com/delete-site", {
+      await axios.post("http://localhost:8000/delete-site", {
         userId: userRes.data.userId,
         siteId,
       });

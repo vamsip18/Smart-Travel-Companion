@@ -11,6 +11,8 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+
+
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
 import PhoneIcon from "@mui/icons-material/Phone";
@@ -23,7 +25,7 @@ import tajMahal from "../Assests/images/signin/Tajmahal.png";
 import airplane from "../Assests/images/signin/Airplane.png";
 import monuments from "../Assests/images/signin/Monuments.png";
 
-const API_URL = "https://smart-travel-companion-backend.onrender.com";
+const API_URL = "http://localhost:8000";
 
 const SignIn = ({ handleLogin }) => {
   const { login } = useAuth();
@@ -50,6 +52,7 @@ const SignIn = ({ handleLogin }) => {
       phone: "",
       password: "",
       confirmPassword: "",
+
     });
   };
 
@@ -96,6 +99,7 @@ const SignIn = ({ handleLogin }) => {
           email,
           phone,
           password,
+          // created_at
         });
 
         if (res.data.success) {
