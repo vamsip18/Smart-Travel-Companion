@@ -5,7 +5,7 @@ import ShareIcon from "@mui/icons-material/Share";
 import { useNavigate } from "react-router-dom";
 
 // Define base URL based on environment
-const BASE_URL ="http://localhost:8000";
+const BASE_URL ="https://smart-travel-companion-udlt.onrender.com";
 
 const Hospitals = ({ location, type, userid }) => {
   const [services, setServices] = useState([]);

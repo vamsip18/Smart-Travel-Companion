@@ -17,7 +17,7 @@ const Temples = ({ location, userid }) => {
     setError("");
 
     axios
-      .get("http://localhost:8000/religious-sites", {
+      .get("https://smart-travel-companion-udlt.onrender.com/religious-sites", {
         params: { location },
       })
       .then((response) => {
@@ -38,7 +38,7 @@ const Temples = ({ location, userid }) => {
 
       try {
         const response = await axios.get(
-          `http://localhost:8000/saved-sites/${userid.userid}`
+          `https://smart-travel-companion-udlt.onrender.com/saved-sites/${userid.userid}`
         );
         const savedIds = new Set(response.data.map((site) => site.site_id));
         setSavedSites(savedIds);
@@ -65,7 +65,7 @@ const Temples = ({ location, userid }) => {
 
     try {
       if (savedSites.has(siteId)) {
-        await axios.post("http://localhost:8000/delete-site", {
+        await axios.post("https://smart-travel-companion-udlt.onrender.com/delete-site", {
           userId: userid.userid,
           siteId: siteId,
         });
@@ -75,7 +75,7 @@ const Temples = ({ location, userid }) => {
           return updated;
         });
       } else {
-        await axios.post("http://localhost:8000/save-site", {
+        await axios.post("https://smart-travel-companion-udlt.onrender.com/save-site", {
           userId: userid.userid,
           siteId: siteId,
           name: site.name || "Unnamed Site",

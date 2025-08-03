@@ -33,7 +33,7 @@ const TouristPlaces = ({ location, userid }) => {
     const fetchSavedPlaces = async () => {
       try {
         const response = await axios.get(
-          `http://localhost:8000/saved-places/${userId}`
+          `https://smart-travel-companion-udlt.onrender.com/saved-places/${userId}`
         );
         const savedIds = response.data.map((place) => place.place_id);
         setSavedPlaces(new Set(savedIds));
@@ -137,7 +137,7 @@ const TouristPlaces = ({ location, userid }) => {
 
     try {
       if (savedPlaces.has(placeId)) {
-        await axios.post("http://localhost:8000/delete-place", {
+        await axios.post("https://smart-travel-companion-udlt.onrender.com/delete-place", {
           userId,
           placeId,
         });
@@ -147,7 +147,7 @@ const TouristPlaces = ({ location, userid }) => {
           return updatedSet;
         });
       } else {
-        await axios.post("http://localhost:8000/save-place", {
+        await axios.post("https://smart-travel-companion-udlt.onrender.com/save-place", {
           userId,
           placeId,
           name: place.name || "Unknown Place",

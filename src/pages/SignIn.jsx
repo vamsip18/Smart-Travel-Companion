@@ -25,7 +25,7 @@ import tajMahal from "../Assests/images/signin/Tajmahal.png";
 import airplane from "../Assests/images/signin/Airplane.png";
 import monuments from "../Assests/images/signin/Monuments.png";
 
-const API_URL = "http://localhost:8000";
+const API_URL = "https://smart-travel-companion-udlt.onrender.com";
 
 const SignIn = ({ handleLogin }) => {
   const { login } = useAuth();

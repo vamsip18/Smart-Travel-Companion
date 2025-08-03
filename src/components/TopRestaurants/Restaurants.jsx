@@ -5,7 +5,7 @@ import FavoriteIcon from "@mui/icons-material/Favorite";
 import ShareIcon from "@mui/icons-material/Share";
 
 // Define base URL based on environment
-const BASE_URL ="http://localhost:8000";
+const BASE_URL ="https://smart-travel-companion-udlt.onrender.com";
 
 const TopRestaurants = ({ location, userid }) => {
   const [restaurants, setRestaurants] = useState([]);

@@ -21,7 +21,7 @@ const Profile = () => {
   const fetchUserDetails = async () => {
     if (!user?.email) return;
     try {
-      const response = await axios.get("http://localhost:8000/get-user-details", {
+      const response = await axios.get("https://smart-travel-companion-udlt.onrender.com/get-user-details", {
         params: { email: user.email },
       });
       setUserData(response.data);
@@ -44,7 +44,7 @@ const Profile = () => {
 
   const handleUpdate = async () => {
     try {
-      await axios.put("http://localhost:8000/update-user-details", {
+      await axios.put("https://smart-travel-companion-udlt.onrender.com/update-user-details", {
         email: user.email,
         full_name: fullName,
         phone_number: phoneNumber,

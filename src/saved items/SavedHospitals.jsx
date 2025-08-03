@@ -14,7 +14,7 @@ const SavedHospitals = () => {
 
     const fetchSavedHospitals = async () => {
       try {
-        const userRes = await axios.get("http://localhost:8000/get-user-id", {
+        const userRes = await axios.get("https://smart-travel-companion-udlt.onrender.com/get-user-id", {
           params: { email: user.email },
         });
 
@@ -22,7 +22,7 @@ const SavedHospitals = () => {
         if (!userId) return;
 
         const hospitalRes = await axios.get(
-          `http://localhost:8000/saved-hospitals/${userId}`
+          `https://smart-travel-companion-udlt.onrender.com/saved-hospitals/${userId}`
         );
         setSavedHospitals(hospitalRes.data);
       } catch (err) {
@@ -53,14 +53,14 @@ const SavedHospitals = () => {
 
   const unsaveHospital = async (hospitalId) => {
     try {
-      const userRes = await axios.get("http://localhost:8000/get-user-id", {
+      const userRes = await axios.get("https://smart-travel-companion-udlt.onrender.com/get-user-id", {
         params: { email: user.email },
       });
       const userId = userRes.data.userId;
 
       console.log("Unsave Request:", { userId, hospitalId });
 
-      await axios.post("http://localhost:8000/delete-hospital", {
+      await axios.post("https://smart-travel-companion-udlt.onrender.com/delete-hospital", {
         userId: userId,
         hospitalId: hospitalId,
       });

@@ -14,14 +14,14 @@ const SavedRestaurants = () => {
 
     const fetchSavedRestaurants = async () => {
       try {
-        const userRes = await axios.get("http://localhost:8000/get-user-id", {
+        const userRes = await axios.get("https://smart-travel-companion-udlt.onrender.com/get-user-id", {
           params: { email: user.email },
         });
         const userId = userRes.data.userId;
         if (!userId) return;
 
         const restaurantRes = await axios.get(
-          `http://localhost:8000/saved-restaurants/${userId}`
+          `https://smart-travel-companion-udlt.onrender.com/saved-restaurants/${userId}`
         );
         setSavedRestaurants(restaurantRes.data);
       } catch (err) {
@@ -52,11 +52,11 @@ const SavedRestaurants = () => {
 
   const unsaveRestaurant = async (restaurantId) => {
     try {
-      const userRes = await axios.get("http://localhost:8000/get-user-id", {
+      const userRes = await axios.get("https://smart-travel-companion-udlt.onrender.com/get-user-id", {
         params: { email: user.email },
       });
 
-      await axios.post("http://localhost:8000/delete-restaurant", {
+      await axios.post("https://smart-travel-companion-udlt.onrender.com/delete-restaurant", {
         user_id: userRes.data.userId,
         restaurantId,
       });
