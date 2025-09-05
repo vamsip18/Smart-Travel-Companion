@@ -19,50 +19,18 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 8000;
 
-// Primary DB (FreeSQL)
+// Primary DB (Railway)
 let db = mysql.createConnection({
-      host: "sql5.freesqldatabase.com",
-      user: "sql5790350",
-      password: "mqQbnl6pw8",
-      database: "sql5790350",
-    });
-    
-
-
-// Attempt primary connection
-db.connect((err) => {
-  if (err) {
-    console.error("Primary DB connection failed. Trying secondary DB...");
-
-    // Fallback DB ()
-    db = mysql.createConnection({
-      host: "hopper.proxy.rlwy.net",
-      port: 43452,
+      host: "centerbeam.proxy.rlwy.net",
+      port: 11532,
       user: "root",
-      password: "uslOflbfSzuTUDYRmPMslEYGChevPVRw",
+      password: "SbviylOEGnApTAOmpxjZbKOEEasXPCLU",
       database: "railway",
       multipleStatements: true,
     });
-
-
-    // db = mysql.createConnection({
-    //   host: "185.27.134.143",
-    //   port: 3306,
-    //   user: "if0_39485960",
-    //   password: "srvagaaf",
-    //   database: "if0_39485960_travel",
-    // });
-
-    db.connect((fallbackErr) => {
-      if (fallbackErr) {
-        console.error("Secondary DB connection failed:", fallbackErr);
-      } else {
-        console.log("Connected to secondary MySQL database (Railway)");
-      }
-    });
-  } else {
-    console.log("Connected to primary MySQL database (FreeSQL)");
-  }
+// Attempt primary connection
+db.connect((err) => {
+    console.log("Connected to MySQL database (Railway)");
 });
 
 // Middleware
