@@ -5,7 +5,7 @@ import FavoriteIcon from "@mui/icons-material/Favorite";
 import ShareIcon from "@mui/icons-material/Share";
 import { useNavigate } from "react-router-dom";
 
-const FOURSQUARE_API_KEY = "fsq3bR2ZSdYTD6aJx4cIN64OgWLS1N9ZZQxilWdPfpL+36E=";
+const FOURSQUARE_API_KEY = "fsq3fZCRtWORXEvlG76YdjqdVnkITG+iQQBqTS7X/zfd1Sw=";
 
 // Fallback local images (make sure they exist in public/assets/images/TouristPlaces/)
 const fallbackImages = Array.from({ length: 10 }, (_, i) => 
