@@ -1,186 +1,115 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import FavoriteIcon from "@mui/icons-material/Favorite";
-// Removed unused import
-import ShareIcon from "@mui/icons-material/Share";
 import { useNavigate } from "react-router-dom";
+import FavoriteIcon from "@mui/icons-material/Favorite";
+import ShareIcon from "@mui/icons-material/Share";
 
-const FOURSQUARE_API_KEY = "fsq3bR2ZSdYTD6aJx4cIN64OgWLS1N9ZZQxilWdPfpL+36E=";
-
-// Fallback local images (make sure they exist in public/assets/images/TouristPlaces/)
-const fallbackImages = Array.from({ length: 10 }, (_, i) => 
-  `/assets/images/TouristPlaces/tourist${i + 1}.jpg`
-);
+const BASE_URL = "http://localhost:8000";
 
 const TouristPlaces = ({ location, userid }) => {
-  const userId = userid?.userid;
-  // Removed unused variable
   const [places, setPlaces] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [savedPlaces, setSavedPlaces] = useState(new Set());
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  const navigateToGoogleMaps = (latitude, longitude) => {
-    window.open(
-      `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`,
-      "_blank"
-    );
-  };
-
+  // Fetch nearby places
   useEffect(() => {
-    if (!userId) return;
+    if (!location) return;
+
+    setLoading(true);
+    axios
+      .get(`${BASE_URL}/fetch-places`, { params: { location } })
+      .then((res) => setPlaces(res.data.results || []))
+      .catch((err) => {
+        console.error(err);
+        setError("Failed to load tourist places.");
+      })
+      .finally(() => setLoading(false));
+  }, [location]);
+
+  // Fetch saved tourist places
+  useEffect(() => {
     const fetchSavedPlaces = async () => {
+      if (!userid?.userid) return;
       try {
+        // console.log(userid.userid);
         const response = await axios.get(
-          `https://smart-travel-companion-udlt.onrender.com/saved-places/${userId}`
+          `${BASE_URL}/saved-places/${userid.userid}`
         );
-        const savedIds = response.data.map((place) => place.place_id);
-        setSavedPlaces(new Set(savedIds));
+        const savedIds = new Set(response.data.map((p) => String(p.place_id)));
+        setSavedPlaces(savedIds);
       } catch (error) {
         console.error("Error fetching saved places:", error);
       }
     };
     fetchSavedPlaces();
-  }, [userId]);
+  }, [userid?.userid]);
 
-  useEffect(() => {
-    if (!location) return;
+  const navigateToGoogleMaps = (lat, lng) => {
+    window.open(
+      `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`,
+      "_blank"
+    );
+  };
 
-    const fetchHistoricalPlaces = async () => {
-      try {
-        const geoResponse = await axios.get(
-          "https://nominatim.openstreetmap.org/search",
-          { params: { q: location, format: "json", limit: 1 } }
-        );
+  const sharePlace = (place) => {
+    const shareText = `🌍 Check out "${place.name}" in ${location}
+🏠 Address: ${place.location?.formatted_address}
+🗺 Google Maps: https://www.google.com/maps/search/?api=1&query=${place.geocodes.main.latitude},${place.geocodes.main.longitude}`;
 
-        if (geoResponse.data.length === 0) {
-          setError("Location not found.");
-          return;
-        }
-
-        const { lat, lon } = geoResponse.data[0];
-
-        const placesResponse = await axios.get(
-          "https://api.foursquare.com/v3/places/search",
-          {
-            headers: { Authorization: FOURSQUARE_API_KEY },
-            params: {
-              ll: `${lat},${lon}`,
-              categories: "16000",
-              sort: "POPULARITY",
-              limit: 16,
-            },
-          }
-        );
-
-        if (!placesResponse.data.results || placesResponse.data.results.length === 0) {
-          setError("No historical places found nearby.");
-          return;
-        }
-
-        const usedFallbackIndexes = new Set();
-
-        const placesWithImages = await Promise.all(
-          placesResponse.data.results.map(async (place, index) => {
-            try {
-              const photoResponse = await axios.get(
-                `https://api.foursquare.com/v3/places/${place.fsq_id}/photos`,
-                { headers: { Authorization: FOURSQUARE_API_KEY } }
-              );
-
-              if (photoResponse.data.length > 0) {
-                const photo = photoResponse.data[0];
-                place.image = `${photo.prefix}300x300${photo.suffix}`;
-              } else {
-                // Assign unique fallback image
-                let fallbackIndex = index % fallbackImages.length;
-                while (usedFallbackIndexes.has(fallbackIndex)) {
-                  fallbackIndex = (fallbackIndex + 1) % fallbackImages.length;
-                }
-                usedFallbackIndexes.add(fallbackIndex);
-                place.image = fallbackImages[fallbackIndex];
-              }
-            } catch (err) {
-              let fallbackIndex = index % fallbackImages.length;
-              while (usedFallbackIndexes.has(fallbackIndex)) {
-                fallbackIndex = (fallbackIndex + 1) % fallbackImages.length;
-              }
-              usedFallbackIndexes.add(fallbackIndex);
-              place.image = fallbackImages[fallbackIndex];
-            }
-            return place;
-          })
-        );
-
-        setPlaces(placesWithImages);
-        setError("");
-      } catch (err) {
-        console.error("Error fetching historical places:", err);
-        setError("Failed to fetch data. Please try again later.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchHistoricalPlaces();
-  }, [location]);
+    if (navigator.share) {
+      navigator.share({ title: place.name, text: shareText }).catch((e) =>
+        console.error("Error sharing:", e)
+      );
+    } else {
+      navigator.clipboard.writeText(shareText);
+      alert("Details copied to clipboard!");
+    }
+  };
 
   const toggleSavePlace = async (place) => {
-    if (!userId) {
-      alert("Please log in to save Tourist Places.");
+    if (!userid?.userid) {
+      alert("Please log in to save places.");
       navigate("/signin");
       return;
     }
 
-    const placeId = String(place.fsq_id);
+    const placeIdStr = String(place.id);
 
     try {
-      if (savedPlaces.has(placeId)) {
-        await axios.post("https://smart-travel-companion-udlt.onrender.com/delete-place", {
-          userId,
-          placeId,
+      if (savedPlaces.has(placeIdStr)) {
+        // Unsave place
+        await axios.post(`${BASE_URL}/delete-place`, {
+          userId: userid.userid,
+          placeId: place.id,
         });
         setSavedPlaces((prev) => {
           const updatedSet = new Set(prev);
-          updatedSet.delete(placeId);
+          updatedSet.delete(placeIdStr);
           return updatedSet;
         });
       } else {
-        await axios.post("https://smart-travel-companion-udlt.onrender.com/save-place", {
-          userId,
-          placeId,
-          name: place.name || "Unknown Place",
-          address: place.location?.formatted_address || "Address not available",
-          latitude: place.geocodes?.main?.latitude || 0,
-          longitude: place.geocodes?.main?.longitude || 0,
-          image: place.image || "",
+        // Save place
+        await axios.post(`${BASE_URL}/save-place`, {
+          userId: userid.userid,
+          placeId: place.id,
+          name: place.name,
+          address: place.location?.formatted_address,
+          image: place.photo,
+          latitude: place.geocodes.main.latitude,
+          longitude: place.geocodes.main.longitude,
         });
-        setSavedPlaces((prev) => new Set([...prev, placeId]));
+        setSavedPlaces((prev) => new Set([...prev, placeIdStr]));
       }
     } catch (error) {
-      console.error("Error toggling save state:", error);
-    }
-  };
-
-  const sharePlace = async (place) => {
-    const googleMapsLink = `https://www.google.com/maps/search/?api=1&query=${place.geocodes?.main?.latitude},${place.geocodes?.main?.longitude}`;
-    const shareText = `🏛 Explore this place: ${place.name} 📍 Address: ${place.location?.formatted_address || "Not available"} 📌 Google Maps: ${googleMapsLink}`;
-    if (navigator.share) {
-      try {
-        await navigator.share({ title: place.name, text: shareText });
-      } catch (error) {
-        console.error("Error sharing:", error);
-      }
-    } else {
-      navigator.clipboard.writeText(shareText);
-      alert("Sharing is not supported in this browser. Place details copied to clipboard!");
+      console.error("Error toggling place save state:", error);
     }
   };
 
   return (
     <div style={{ padding: "20px" }}>
-      <h1 style={{ textAlign: "center" }}>Top Historical Places in {location}</h1>
+      <h1 style={{ textAlign: "center" }}>Tourist Attractions in {location}</h1>
       {loading && <p style={{ textAlign: "center" }}>Loading...</p>}
       {error && <p style={{ color: "red", textAlign: "center" }}>{error}</p>}
       <div
@@ -192,45 +121,34 @@ const TouristPlaces = ({ location, userid }) => {
         }}
       >
         {places.map((place) => {
-          const placeId = String(place.fsq_id);
+          const placeIdStr = String(place.id);
+          const isSaved = savedPlaces.has(placeIdStr);
+
           return (
             <div
-              key={place.fsq_id}
+              key={place.id}
               style={{
                 border: "1px solid #ccc",
                 borderRadius: "10px",
                 padding: "10px",
                 width: "280px",
                 textAlign: "center",
-                cursor: "pointer",
                 display: "flex",
                 flexDirection: "column",
                 justifyContent: "space-between",
               }}
-              onClick={() =>
-                navigateToGoogleMaps(
-                  place.geocodes.main.latitude,
-                  place.geocodes.main.longitude
-                )
-              }
             >
               <img
-                src={place.image}
+                src={
+                  place.photo ||
+                  "https://via.placeholder.com/250x150.png?text=No+Image"
+                }
                 alt={place.name}
-                style={{
-                  width: "100%",
-                  borderRadius: "10px",
-                  height: "150px",
-                  objectFit: "cover",
-                }}
-                onError={(e) => {
-                  e.target.src = "/assets/images/hospitals/default.jpg";
-                }}
+                style={{ width: "100%", borderRadius: "10px", height: "150px" }}
               />
-              <h3 style={{ margin: "10px 0" }}>{place.name}</h3>
-              <p style={{ marginBottom: "10px" }}>
-                {place.location?.formatted_address || "Address not available"}
-              </p>
+              <h3>{place.name}</h3>
+              <p>{place.location?.formatted_address || "No address available"}</p>
+
               <div
                 style={{
                   marginTop: "auto",
@@ -247,7 +165,6 @@ const TouristPlaces = ({ location, userid }) => {
                     color: "white",
                     border: "none",
                     borderRadius: "5px",
-                    cursor: "pointer",
                   }}
                   onClick={() =>
                     navigateToGoogleMaps(
@@ -265,34 +182,22 @@ const TouristPlaces = ({ location, userid }) => {
                     color: "white",
                     border: "none",
                     borderRadius: "5px",
-                    cursor: "pointer",
                   }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    sharePlace(place);
-                  }}
+                  onClick={() => sharePlace(place)}
                 >
                   <ShareIcon />
                 </button>
                 <button
                   style={{
                     padding: "6px 12px",
-                    background: savedPlaces.has(placeId)
-                      ? "gray"
-                      : "red",
+                    background: isSaved ? "gray" : "red",
                     color: "white",
                     border: "none",
                     borderRadius: "5px",
-                    cursor: "pointer",
                   }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggleSavePlace(place);
-                  }}
+                  onClick={() => toggleSavePlace(place)}
                 >
-                  <FavoriteIcon
-                    style={{ color: savedPlaces.has(placeId) ? "red" : "white" }}
-                  />
+                  <FavoriteIcon style={{ color: isSaved ? "red" : "white" }} />
                 </button>
               </div>
             </div>

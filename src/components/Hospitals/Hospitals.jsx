@@ -1,60 +1,50 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import ShareIcon from "@mui/icons-material/Share";
-import { useNavigate } from "react-router-dom";
 
-// Define base URL based on environment
-const BASE_URL ="https://smart-travel-companion-udlt.onrender.com";
+const BASE_URL = "http://localhost:8000";
 
-const Hospitals = ({ location, type, userid }) => {
-  const [services, setServices] = useState([]);
+const Hospitals = ({ location, userid }) => {
+  const [hospitals, setHospitals] = useState([]);
   const [savedHospitals, setSavedHospitals] = useState(new Set());
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-  const budget = 2;
-  const serviceType = type || "hospitals";
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
+  // Fetch nearby hospitals
   useEffect(() => {
     if (!location) {
-      console.log("Location is empty or undefined");
       setError("Please provide a valid location.");
       return;
     }
 
-    // console.log("Fetching hospitals for location:", location);
-
-    // Debounce fetch to prevent rapid API calls
     const debounceFetch = setTimeout(() => {
       setLoading(true);
+      setError("");
+
       axios
-        .get(`${BASE_URL}/${serviceType}`, {
-          params: { location, budget },
-        })
+        .get(`${BASE_URL}/fetch-hospitals`, { params: { location } })
         .then((response) => {
-          setServices(response.data);
-          setError("");
+          setHospitals(response.data.results || []);
         })
         .catch((error) => {
-          console.error(`Error fetching ${serviceType}:`, error);
-          const errorMessage =
-            error.response?.data?.details ||
-            `Failed to fetch ${serviceType} data. Please try again later.`;
-          setError(errorMessage);
+          console.error("Error fetching hospitals:", error);
+          setError("Failed to load hospitals. Please try again later.");
         })
         .finally(() => {
           setLoading(false);
         });
-    }, 500); // 500ms debounce
+    }, 500);
 
     return () => clearTimeout(debounceFetch);
-  }, [location, budget, serviceType]);
+  }, [location]);
 
+  // Fetch saved hospitals
   useEffect(() => {
     const fetchSavedHospitals = async () => {
       if (!userid?.userid) return;
-
       try {
         const response = await axios.get(
           `${BASE_URL}/saved-hospitals/${userid.userid}`
@@ -65,37 +55,28 @@ const Hospitals = ({ location, type, userid }) => {
         console.error("Error fetching saved hospitals:", error);
       }
     };
-
     fetchSavedHospitals();
   }, [userid?.userid]);
 
   const navigateToGoogleMaps = (lat, lng) => {
-    const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
-    window.open(url, "_blank");
+    window.open(
+      `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`,
+      "_blank"
+    );
   };
 
   const shareHospital = (hospital) => {
-    const googleMapsLink = `https://www.google.com/maps/search/?api=1&query=${hospital.geocodes.main.latitude},${hospital.geocodes.main.longitude}`;
-    let shareText = `🏥 *Check out this hospital:* ${hospital.name}`;
-    if (hospital.location?.formatted_address) {
-      shareText += `\n🏠 *Address:* ${hospital.location.formatted_address}`;
-    }
-    shareText += `\n📍 *Google Maps:* ${googleMapsLink}`;
-
-    const shareData = {
-      title: hospital.name,
-      text: shareText,
-    };
+    const shareText = `🏥 Check out "${hospital.name}" in ${location}
+🏠 Address: ${hospital.location?.formatted_address}
+🗺 Google Maps: https://www.google.com/maps/search/?api=1&query=${hospital.geocodes.main.latitude},${hospital.geocodes.main.longitude}`;
 
     if (navigator.share) {
-      navigator.share(shareData).catch((error) =>
-        console.error("Error sharing:", error)
-      );
+      navigator
+        .share({ title: hospital.name, text: shareText })
+        .catch((e) => console.error("Error sharing:", e));
     } else {
-      navigator.clipboard
-        .writeText(shareText)
-        .then(() => alert("Details copied to clipboard!"))
-        .catch((error) => console.error("Error copying to clipboard:", error));
+      navigator.clipboard.writeText(shareText);
+      alert("Details copied to clipboard!");
     }
   };
 
@@ -106,30 +87,32 @@ const Hospitals = ({ location, type, userid }) => {
       return;
     }
 
-    const hospitalId = String(hospital.id);
+    const hospitalIdStr = String(hospital.id);
 
     try {
-      if (savedHospitals.has(hospitalId)) {
+      if (savedHospitals.has(hospitalIdStr)) {
+        // Unsave hospital
         await axios.post(`${BASE_URL}/delete-hospital`, {
           userId: userid.userid,
-          hospitalId,
+          hospitalId: hospital.id,
         });
         setSavedHospitals((prev) => {
           const updatedSet = new Set(prev);
-          updatedSet.delete(hospitalId);
+          updatedSet.delete(hospitalIdStr);
           return updatedSet;
         });
       } else {
+        // Save hospital
         await axios.post(`${BASE_URL}/save-hospital`, {
           userId: userid.userid,
-          hospitalId,
+          hospitalId: hospital.id,
           name: hospital.name,
-          address: hospital.location.formatted_address,
+          address: hospital.location?.formatted_address,
           photo: hospital.photo,
           latitude: hospital.geocodes.main.latitude,
           longitude: hospital.geocodes.main.longitude,
         });
-        setSavedHospitals((prev) => new Set([...prev, hospitalId]));
+        setSavedHospitals((prev) => new Set([...prev, hospitalIdStr]));
       }
     } catch (error) {
       console.error("Error toggling hospital save state:", error);
@@ -138,17 +121,9 @@ const Hospitals = ({ location, type, userid }) => {
 
   return (
     <div style={{ padding: "20px" }}>
-      <h1 style={{ textAlign: "center" }}>
-        Top {serviceType.charAt(0).toUpperCase() + serviceType.slice(1)} in{" "}
-        {location}
-      </h1>
+      <h1 style={{ textAlign: "center" }}>Hospitals in {location}</h1>
       {loading && <p style={{ textAlign: "center" }}>Loading...</p>}
       {error && <p style={{ color: "red", textAlign: "center" }}>{error}</p>}
-      {!loading && services.length === 0 && !error && (
-        <p style={{ textAlign: "center", fontSize: "16px", color: "gray" }}>
-          No hospitals available for the selected location.
-        </p>
-      )}
       <div
         style={{
           display: "flex",
@@ -157,13 +132,13 @@ const Hospitals = ({ location, type, userid }) => {
           justifyContent: "center",
         }}
       >
-        {services.map((hospital, index) => {
-          const hospitalId = String(hospital.id);
-          const isSaved = savedHospitals.has(hospitalId);
+        {hospitals.map((hospital) => {
+          const hospitalIdStr = String(hospital.id);
+          const isSaved = savedHospitals.has(hospitalIdStr);
 
           return (
             <div
-              key={index}
+              key={hospital.id}
               style={{
                 border: "1px solid #ccc",
                 borderRadius: "10px",
@@ -171,9 +146,6 @@ const Hospitals = ({ location, type, userid }) => {
                 width: "280px",
                 textAlign: "center",
                 cursor: "pointer",
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "space-between",
               }}
               onClick={() =>
                 navigateToGoogleMaps(
@@ -189,23 +161,17 @@ const Hospitals = ({ location, type, userid }) => {
                 }
                 alt={hospital.name}
                 style={{ width: "100%", borderRadius: "10px", height: "150px" }}
-                onError={(e) => {
-                  e.target.src =
-                    "https://via.placeholder.com/250x150.png?text=No+Image";
-                }}
               />
               <h3>{hospital.name}</h3>
               <p>
                 {hospital.location?.formatted_address || "No address available"}
               </p>
-
               <div
                 style={{
-                  marginTop: "auto",
+                  marginTop: "10px",
                   display: "flex",
+                  gap: "10px",
                   justifyContent: "center",
-                  gap: "8px",
-                  paddingTop: "10px",
                 }}
               >
                 <button
@@ -215,7 +181,6 @@ const Hospitals = ({ location, type, userid }) => {
                     color: "white",
                     border: "none",
                     borderRadius: "5px",
-                    cursor: "pointer",
                   }}
                   onClick={(e) => {
                     e.stopPropagation();
@@ -234,7 +199,6 @@ const Hospitals = ({ location, type, userid }) => {
                     color: "white",
                     border: "none",
                     borderRadius: "5px",
-                    cursor: "pointer",
                   }}
                   onClick={(e) => {
                     e.stopPropagation();
@@ -250,7 +214,6 @@ const Hospitals = ({ location, type, userid }) => {
                     color: "white",
                     border: "none",
                     borderRadius: "5px",
-                    cursor: "pointer",
                   }}
                   onClick={(e) => {
                     e.stopPropagation();

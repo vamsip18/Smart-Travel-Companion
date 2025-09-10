@@ -16,18 +16,17 @@ const Profile = () => {
   const [editingField, setEditingField] = useState(null);
   const [fullName, setFullName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
-  const [created_at,setCreated_at]=useState("");
 
   const fetchUserDetails = async () => {
     if (!user?.email) return;
+    // console.log(user);
     try {
-      const response = await axios.get("https://smart-travel-companion-udlt.onrender.com/get-user-details", {
+      const response = await axios.get("http://localhost:8000/get-user-details", {
         params: { email: user.email },
       });
-      setUserData(response.data);
-      setFullName(response.data.full_name || "");
-      setPhoneNumber(response.data.phone_number || "");
-      setCreated_at(response.data.created_at || "")
+      setUserData(response.data.user);
+      setFullName(response.data.user.full_name || "");
+      setPhoneNumber(response.data.user.phone_number || "");
     } catch (error) {
       console.error("Failed to fetch user details:", error);
     }
@@ -48,7 +47,6 @@ const Profile = () => {
         email: user.email,
         full_name: fullName,
         phone_number: phoneNumber,
-        created_at:new Date().toISOString().split("T")[0], 
       });
       setEditingField(null);
       await fetchUserDetails();

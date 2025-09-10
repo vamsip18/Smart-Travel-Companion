@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import ShareIcon from "@mui/icons-material/Share";
-import { useNavigate } from "react-router-dom";
+
+const BASE_URL = "http://localhost:8000";
 
 const Temples = ({ location, userid }) => {
-  const [religiousSites, setReligiousSites] = useState([]);
+  const [sites, setSites] = useState([]);
   const [savedSites, setSavedSites] = useState(new Set());
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
@@ -13,42 +15,56 @@ const Temples = ({ location, userid }) => {
 
   useEffect(() => {
     if (!location) return;
-    setLoading(true);
-    setError("");
 
+    setLoading(true);
     axios
-      .get("https://smart-travel-companion-udlt.onrender.com/religious-sites", {
-        params: { location },
+      .get(`${BASE_URL}/religious-sites`, { params: { location } })
+      .then((res) => setSites(res.data.results || []))
+      .catch((err) => {
+        console.error(err);
+        setError("Failed to load religious sites.");
       })
-      .then((response) => {
-        setReligiousSites(response.data);
-        // console.log(response.data);
-        setLoading(false);
-      })
-      .catch((error) => {
-        setError("Failed to fetch religious sites. Please try again.");
-        console.error("Error fetching religious sites:", error);
-        setLoading(false);
-      });
+      .finally(() => setLoading(false));
   }, [location]);
 
+  // Fetch saved sites
   useEffect(() => {
     const fetchSavedSites = async () => {
       if (!userid?.userid) return;
-
       try {
         const response = await axios.get(
-          `https://smart-travel-companion-udlt.onrender.com/saved-sites/${userid.userid}`
+          `${BASE_URL}/saved-sites/${userid.userid}`
         );
-        const savedIds = new Set(response.data.map((site) => site.site_id));
+        const savedIds = new Set(response.data.map((s) => String(s.site_id)));
         setSavedSites(savedIds);
       } catch (error) {
-        console.error("Error fetching saved religious sites:", error);
+        console.error("Error fetching saved sites:", error);
       }
     };
-
     fetchSavedSites();
   }, [userid?.userid]);
+
+  const navigateToGoogleMaps = (lat, lng) => {
+    window.open(
+      `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`,
+      "_blank"
+    );
+  };
+
+  const shareSite = (site) => {
+    const shareText = `🙏 Check out "${site.name}" in ${location}
+🏠 Address: ${site.location?.formatted_address}
+🗺 Google Maps: https://www.google.com/maps/search/?api=1&query=${site.geocodes.main.latitude},${site.geocodes.main.longitude}`;
+
+    if (navigator.share) {
+      navigator
+        .share({ title: site.name, text: shareText })
+        .catch((e) => console.error("Error sharing:", e));
+    } else {
+      navigator.clipboard.writeText(shareText);
+      alert("Details copied to clipboard!");
+    }
+  };
 
   const toggleSaveSite = async (site) => {
     if (!userid?.userid) {
@@ -57,201 +73,130 @@ const Temples = ({ location, userid }) => {
       return;
     }
 
-    const siteId = site.id || site.fsq_id;
-    if (!siteId) {
-      console.error("Site ID is missing. Cannot save site.");
-      return;
-    }
+    const siteIdStr = String(site.id);
 
     try {
-      if (savedSites.has(siteId)) {
-        await axios.post("https://smart-travel-companion-udlt.onrender.com/delete-site", {
+      if (savedSites.has(siteIdStr)) {
+        // Unsave site
+        await axios.post(`${BASE_URL}/delete-site`, {
           userId: userid.userid,
-          siteId: siteId,
+          siteId: site.id,
         });
         setSavedSites((prev) => {
-          const updated = new Set(prev);
-          updated.delete(siteId);
-          return updated;
+          const updatedSet = new Set(prev);
+          updatedSet.delete(siteIdStr);
+          return updatedSet;
         });
       } else {
-        await axios.post("https://smart-travel-companion-udlt.onrender.com/save-site", {
+        // Save site
+        await axios.post(`${BASE_URL}/save-site`, {
           userId: userid.userid,
-          siteId: siteId,
-          name: site.name || "Unnamed Site",
-          address: site.address || "Address not available",
-          photo: site.image || "",
-          latitude: site.geocodes?.main?.latitude,
-          longitude: site.geocodes?.main?.longitude,
+          siteId: site.id,
+          name: site.name,
+          address: site.location?.formatted_address,
+          photo: site.photo,
+          latitude: site.geocodes.main.latitude,
+          longitude: site.geocodes.main.longitude,
         });
-        setSavedSites((prev) => new Set([...prev, siteId]));
+        setSavedSites((prev) => new Set([...prev, siteIdStr]));
       }
     } catch (error) {
       console.error("Error toggling site save state:", error);
     }
   };
 
-  const shareSiteDetails = (site) => {
-    const shareData = `
-🙏 Check out this religious site: ${site.name}
-📍 Address: ${site.address}
-🗺 Google Maps: https://www.google.com/maps/search/?api=1&query=${site.geocodes.main.latitude},${site.geocodes.main.longitude}
-    `;
-
-    if (navigator.share) {
-      navigator
-        .share({
-          title: "Religious Site Details",
-          text: shareData,
-        })
-        .then(() => console.log("Shared successfully!"))
-        .catch((error) => console.error("Error sharing:", error));
-    } else {
-      alert("Sharing not supported on this browser. Copying to clipboard...");
-      navigator.clipboard.writeText(shareData);
-    }
-  };
-
-  if (loading) return <p>Loading religious sites...</p>;
-  if (error) return <p style={{ color: "red" }}>{error}</p>;
-  if (religiousSites.length === 0) {
-    return (
-      <>
-        <h1 style={{ textAlign: "center", marginBottom: "20px" }}>
-          Top Religious Places Near {location}
-        </h1>
-        <p style={{ color: "red" }}>
-          No religious sites found for the given location.
-        </p>
-      </>
-    );
-  }
-
   return (
     <div style={{ padding: "20px" }}>
-      <h1 style={{ textAlign: "center", marginBottom: "20px" }}>
-        Top Religious Places Near {location}
-      </h1>
+      <h1 style={{ textAlign: "center" }}>Religious Sites in {location}</h1>
+      {loading && <p style={{ textAlign: "center" }}>Loading...</p>}
+      {error && <p style={{ color: "red", textAlign: "center" }}>{error}</p>}
       <div
         style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
+          display: "flex",
+          flexWrap: "wrap",
           gap: "20px",
+          justifyContent: "center",
         }}
       >
-        {religiousSites.map((site) => {
-          const imageUrl =
-            site.image || "https://source.unsplash.com/random/300x300/?temple,church,mosque";
+        {sites.map((site) => {
+          const siteIdStr = String(site.id);
+          const isSaved = savedSites.has(siteIdStr);
 
           return (
             <div
-              key={site.id || site.fsq_id}
+              key={site.id}
               style={{
                 border: "1px solid #ccc",
                 borderRadius: "10px",
                 padding: "10px",
+                width: "280px",
                 textAlign: "center",
-                boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
                 display: "flex",
                 flexDirection: "column",
                 justifyContent: "space-between",
-                height: "100%",
               }}
             >
-              <div>
-                <img
-                  src={imageUrl}
-                  alt={site.name || "Religious Site"}
-                  style={{
-                    width: "100%",
-                    height: "150px",
-                    objectFit: "cover",
-                    borderRadius: "10px",
-                    marginBottom: "10px",
-                  }}
-                />
-                <h3
-                  style={{
-                    margin: "5px 0",
-                    fontSize: "16px",
-                    fontWeight: "bold",
-                  }}
-                >
-                  {site.name}
-                </h3>
-                <p style={{ margin: "5px 0", color: "#555", fontSize: "14px" }}>
-                  {site.address}
-                </p>
-              </div>
+              <img
+                src={
+                  site.photo ||
+                  "https://via.placeholder.com/250x150.png?text=No+Image"
+                }
+                alt={site.name}
+                style={{ width: "100%", borderRadius: "10px", height: "150px" }}
+              />
+              <h3>{site.name}</h3>
+              <p>{site.location?.formatted_address || "No address available"}</p>
 
               <div
                 style={{
                   marginTop: "auto",
                   display: "flex",
-                  justifyContent: "space-evenly",
-                  alignItems: "center",
-                  padding: "10px 0",
-                  width: "100%",
+                  justifyContent: "center",
+                  gap: "8px",
+                  paddingTop: "10px",
                 }}
               >
                 <button
                   style={{
-                    padding: "5px 10px",
+                    padding: "6px 12px",
                     background: "navy",
                     color: "white",
                     border: "none",
                     borderRadius: "5px",
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "5px",
                   }}
                   onClick={() =>
-                    window.open(
-                      `https://www.google.com/maps/dir/?api=1&destination=${site.geocodes.main.latitude},${site.geocodes.main.longitude}`,
-                      "_blank"
+                    navigateToGoogleMaps(
+                      site.geocodes.main.latitude,
+                      site.geocodes.main.longitude
                     )
                   }
                 >
                   Directions
                 </button>
-
-                
                 <button
                   style={{
-                    padding: "5px 10px",
+                    padding: "6px 12px",
                     background: "#28a745",
                     color: "white",
                     border: "none",
                     borderRadius: "5px",
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "5px",
                   }}
-                  onClick={() => shareSiteDetails(site)}
+                  onClick={() => shareSite(site)}
                 >
                   <ShareIcon />
                 </button>
                 <button
                   style={{
-                    padding: "5px 10px",
-                    background: savedSites.has(site.id || site.fsq_id)
-                      ? "gray"
-                      : "red",
+                    padding: "6px 12px",
+                    background: isSaved ? "gray" : "red",
                     color: "white",
                     border: "none",
                     borderRadius: "5px",
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "5px",
                   }}
                   onClick={() => toggleSaveSite(site)}
                 >
-                  <FavoriteIcon />
+                  <FavoriteIcon style={{ color: isSaved ? "red" : "white" }} />
                 </button>
-
               </div>
             </div>
           );
