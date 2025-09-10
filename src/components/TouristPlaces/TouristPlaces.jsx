@@ -4,7 +4,16 @@ import { useNavigate } from "react-router-dom";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import ShareIcon from "@mui/icons-material/Share";
 
+<<<<<<< HEAD
 const BASE_URL = "http://localhost:8000";
+=======
+const FOURSQUARE_API_KEY = "fsq3fZCRtWORXEvlG76YdjqdVnkITG+iQQBqTS7X/zfd1Sw=";
+
+// Fallback local images (make sure they exist in public/assets/images/TouristPlaces/)
+const fallbackImages = Array.from({ length: 10 }, (_, i) => 
+  `/assets/images/TouristPlaces/tourist${i + 1}.jpg`
+);
+>>>>>>> 52349ddb7fdd4351b2be7ec13555e8ce7987a6f8
 
 const TouristPlaces = ({ location, userid }) => {
   const [places, setPlaces] = useState([]);
