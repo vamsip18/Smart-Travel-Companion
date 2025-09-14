@@ -1259,16 +1259,34 @@ app.put("/update-user-details", async (req, res) => {
 // 👉 For brevity, I’ll keep the structure identical to what you had: INSERT, GET by user_id
 
 app.post("/save-restaurant", (req, res) => {
-  const { user_id, name, location, photo } = req.body;
+  const { user_id, restaurantId, name, address, photo, latitude, longitude } = req.body;
+
+  const query = `
+    INSERT INTO saved_restaurants (user_id, restaurant_id, name, address, photo, latitude, longitude)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+    ON DUPLICATE KEY UPDATE name=?, address=?, photo=?, latitude=?, longitude=?
+  `;
   db.query(
-    "INSERT INTO saved_restaurants (id, user_id, name, location, photo) VALUES (?, ?, ?, ?, ?)",
-    [uuidv4(), user_id, name, JSON.stringify(location), photo],
-    (err) => {
-      if (err) return res.status(500).json({ success: false, message: "Error saving restaurant" });
-      res.json({ success: true, message: "Restaurant saved successfully" });
-    }
+    query,
+    [
+      user_id,
+      restaurantId,
+      name,
+      address,
+      photo,
+      latitude,
+      longitude
+    ],
+    (err, result) => {
+      if (err) {
+        console.error("Error saving restaurant:", err);
+        return res.status(500).json({ error: "Failed to save restaurant" });
+      }
+      res.status(200).json({ message: "Restaurant saved successfully!" });
+      }
   );
 });
+
 
 app.get("/saved-restaurants/:user_id", (req, res) => {
   const userId = req.params.user_id;
