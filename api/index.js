@@ -1271,10 +1271,37 @@ app.post("/save-restaurant", (req, res) => {
 });
 
 app.get("/saved-restaurants/:user_id", (req, res) => {
-  db.query("SELECT * FROM saved_restaurants WHERE user_id = ?", [req.params.user_id], (err, results) => {
-    if (err) return res.status(500).json({ success: false });
-    res.json({ success: true, results });
+  const userId = req.params.user_id;
+  db.query("SELECT * FROM saved_restaurants WHERE user_id = ?", [userId], (err, results) => {
+    if (err) {
+      console.error("Error fetching saved restaurants:", err);
+      return res.status(500).json({ error: "Failed to fetch saved restaurants" });
+    }
+    // Send array directly (frontend expects an array now)
+    res.json(results || []);
   });
+});
+
+
+app.post("/delete-restaurant", (req, res) => {
+  const { user_id, restaurantId } = req.body;
+  if (!user_id || !restaurantId) {
+    return res.status(400).json({ message: "Missing user_id or restaurantId" });
+  }
+  db.query(
+    "DELETE FROM saved_restaurants WHERE user_id = ? AND (restaurant_id = ? OR id = ? OR place_id = ?)",
+    [user_id, restaurantId, restaurantId, restaurantId],
+    (err, result) => {
+      if (err) {
+        console.error("Error deleting saved restaurant:", err);
+        return res.status(500).json({ error: "Failed to delete saved restaurant" });
+      }
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ message: "Saved restaurant not found" });
+      }
+      res.json({ success: true, message: "Restaurant unsaved" });
+    }
+  );
 });
 
 // -----------------------------
