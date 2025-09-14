@@ -14,16 +14,26 @@ const SavedRestaurants = () => {
 
     const fetchSavedRestaurants = async () => {
       try {
-        const userRes = await axios.get("https://smart-travel-companion-udlt.onrender.com/get-user-id", {
-          params: { email: user.email },
-        });
+        const userRes = await axios.get(
+          "https://smart-travel-companion-udlt.onrender.com/get-user-id",
+          {
+            params: { email: user.email },
+          }
+        );
         const userId = userRes.data.userId;
         if (!userId) return;
 
         const restaurantRes = await axios.get(
           `https://smart-travel-companion-udlt.onrender.com/saved-restaurants/${userId}`
         );
-        setSavedRestaurants(restaurantRes.data);
+
+        console.log("API response:", restaurantRes.data);
+
+        setSavedRestaurants(
+          Array.isArray(restaurantRes.data)
+            ? restaurantRes.data
+            : restaurantRes.data.restaurants || []
+        );
       } catch (err) {
         console.error("Error fetching saved restaurants:", err);
       } finally {
@@ -44,7 +54,9 @@ const SavedRestaurants = () => {
 🗺 Google Maps: https://www.google.com/maps/search/?api=1&query=${restaurant.latitude},${restaurant.longitude}`;
     const shareData = { title: restaurant.name, text: shareText };
     if (navigator.share) {
-      navigator.share(shareData).catch((err) => console.error("Share error:", err));
+      navigator.share(shareData).catch((err) =>
+        console.error("Share error:", err)
+      );
     } else {
       alert("Sharing not supported in this browser.");
     }
@@ -52,14 +64,20 @@ const SavedRestaurants = () => {
 
   const unsaveRestaurant = async (restaurantId) => {
     try {
-      const userRes = await axios.get("https://smart-travel-companion-udlt.onrender.com/get-user-id", {
-        params: { email: user.email },
-      });
+      const userRes = await axios.get(
+        "https://smart-travel-companion-udlt.onrender.com/get-user-id",
+        {
+          params: { email: user.email },
+        }
+      );
 
-      await axios.post("https://smart-travel-companion-udlt.onrender.com/delete-restaurant", {
-        user_id: userRes.data.userId,
-        restaurantId,
-      });
+      await axios.post(
+        "https://smart-travel-companion-udlt.onrender.com/delete-restaurant",
+        {
+          user_id: userRes.data.userId,
+          restaurantId,
+        }
+      );
 
       setSavedRestaurants((prev) =>
         prev.filter((restaurant) => restaurant.restaurant_id !== restaurantId)
@@ -70,12 +88,16 @@ const SavedRestaurants = () => {
   };
 
   return (
-    <div >
-      <h2 style={{ textAlign: "center", marginTop: "40px" }}>Saved Restaurants</h2>
+    <div>
+      <h2 style={{ textAlign: "center", marginTop: "40px" }}>
+        Saved Restaurants
+      </h2>
       {loading ? (
         <p style={{ textAlign: "center", color: "gray" }}>Loading...</p>
-      ) : savedRestaurants.length === 0 ? (
-        <p style={{ textAlign: "center", color: "gray" }}>No saved restaurants.</p>
+      ) : !Array.isArray(savedRestaurants) || savedRestaurants.length === 0 ? (
+        <p style={{ textAlign: "center", color: "gray" }}>
+          No saved restaurants.
+        </p>
       ) : (
         <div
           style={{
@@ -127,7 +149,9 @@ const SavedRestaurants = () => {
                 }
               />
               <h3 style={{ margin: "10px 0 5px" }}>{restaurant.name}</h3>
-              <p style={{ color: "#666", fontSize: "14px" }}>{restaurant.address}</p>
+              <p style={{ color: "#666", fontSize: "14px" }}>
+                {restaurant.address}
+              </p>
 
               <div
                 style={{
@@ -142,7 +166,10 @@ const SavedRestaurants = () => {
                   style={buttonStyle("navy")}
                   onClick={(e) => {
                     e.stopPropagation();
-                    navigateToGoogleMaps(restaurant.latitude, restaurant.longitude);
+                    navigateToGoogleMaps(
+                      restaurant.latitude,
+                      restaurant.longitude
+                    );
                   }}
                 >
                   Directions
