@@ -839,8 +839,8 @@ app.use(
     origin: [
       "https://smart-travel-companion.vercel.app",
       "https://smart-travel-companion-udlt.onrender.com",
-      "http://localhost:5173",
       "http://localhost:8000",
+      "http://localhost:5173"
     ],
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
@@ -1029,43 +1029,218 @@ const fetchPlaces = async (location, query, limit = 10) => {
 // ----------------------
 // AUTH ENDPOINTS
 // ----------------------
+// Register
 app.post("/register", async (req, res) => {
-  const { id, name, email, password, phone } = req.body;
+  const { fullname, email, phone, password } = req.body;
+  if (!fullname || !email || !phone || !password) {
+    return res.status(400).json({ success: false, message: "All fields are required!" });
+  }
   try {
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const userId = uuidv4();
+    const hashed = await bcrypt.hash(password, 10);
     db.query(
-      "INSERT INTO users (id, name, email, password, phone) VALUES (?, ?, ?, ?, ?)",
-      [id || uuidv4(), name, email, hashedPassword, phone],
+      "INSERT INTO users (id, fullname, email, phone, password) VALUES (?, ?, ?, ?, ?)",
+      [userId, fullname, email, phone, hashed],
       (err) => {
-        if (err) return res.status(500).json({ success: false, message: "Error registering user" });
-        res.json({ success: true, message: "User registered successfully" });
+        if (err) {
+          if (err.code === "ER_DUP_ENTRY") {
+            return res.status(400).json({
+              success: false,
+              message: "User with this email already exists!",
+            });
+          }
+          console.error("Register DB error:", err);
+          return res.status(500).json({ success: false, message: "Database error" });
+        }
+        res.status(201).json({ success: true, message: "Registration successful!" });
       }
     );
-  } catch {
-    res.status(500).json({ success: false, message: "Server error" });
+  } catch (e) {
+    console.error("Register error:", e);
+    res.status(500).json({ success: false, message: "Internal error" });
   }
 });
 
+// Login
 app.post("/login", (req, res) => {
   const { email, password } = req.body;
-  db.query("SELECT * FROM users WHERE email = ?", [email], async (err, results) => {
-    if (err || results.length === 0) return res.status(400).json({ success: false, message: "Invalid email or password" });
+  if (!email || !password) {
+    return res.status(400).json({ success: false, message: "Email and password are required!" });
+  }
+  db.query("SELECT * FROM users WHERE email = ?", [email], async (err, rows) => {
+    if (err) {
+      console.error("Login DB error:", err);
+      return res.status(500).json({ success: false, message: "Internal server error" });
+    }
+    if (!rows || rows.length === 0) {
+      return res.status(401).json({ success: false, message: "Invalid email or password!" });
+    }
+    const user = rows[0];
+    const ok = await bcrypt.compare(password, user.password);
+    if (!ok) {
+      return res.status(401).json({ success: false, message: "Invalid email or password!" });
+    }
+    res.json({
+      success: true,
+      message: "Login successful!",
+      user: { id: user.id, fullname: user.fullname, email: user.email, phone: user.phone },
+    });
+  });
+});
+
+// // Get user id by email
+// app.get("/get-user-id", (req, res) => {
+//   const { email } = req.query;
+//   if (!email) return res.status(400).json({ error: "Email is required" });
+//   db.query("SELECT id FROM users WHERE email = ?", [email], (err, rows) => {
+//     if (err) {
+//       console.error("get-user-id error:", err);
+//       return res.status(500).json({ error: "Failed to fetch user ID" });
+//     }
+//     if (!rows?.length) return res.status(404).json({ error: "User not found" });
+//     res.json({ userId: rows[0].id });
+//   });
+// });
+
+// // Get user details
+// app.get("/get-user-details", (req, res) => {
+//   const { email } = req.query;
+//   if (!email) return res.status(400).json({ success: false, message: "Email is required" });
+//   db.query(
+//     "SELECT fullname, phone FROM users WHERE email = ?",
+//     [email],
+//     (err, rows) => {
+//       if (err) {
+//         console.error("get-user-details error:", err);
+//         return res.status(500).json({ success: false, message: "Server error" });
+//       }
+//       if (!rows?.length) return res.status(404).json({ success: false, message: "User not found" });
+//       const u = rows[0];
+//       res.json({
+//         success: true,
+//         fullname: u.fullname,
+//         phone: u.phone,
+//       });
+//     }
+//   );
+// });
+
+// // Update user details
+// app.put("/update-user-details", async (req, res) => {
+//   const { email, fullname, phone } = req.body;
+//   if (!email || !fullname || !phone) {
+//     return res.status(400).json({ error: "Missing required fields" });
+//   }
+//   try {
+//     await db.promise().query(
+//       "UPDATE users SET fullname = ?, phone = ? WHERE email = ?",
+//       [fullname, phone, email] // ✅ fixed variable names
+//     );
+//     const [rows] = await db.promise().query(
+//       "SELECT email, fullname, phone FROM users WHERE email = ?",
+//       [email]
+//     );
+//     res.json({ success: true, user: rows[0] });
+//   } catch (e) {
+//     console.error("update-user-details error:", e);
+//     res.status(500).json({ error: "Failed to update user details" });
+//   }
+// });
+
+// // Profile by id
+// app.get("/profile/:id", (req, res) => {
+//   const userId = req.params.id;
+//   db.query(
+//     "SELECT id, fullname, email, phone FROM users WHERE id = ?",
+//     [userId],
+//     (err, rows) => {
+//       if (err) {
+//         console.error("profile error:", err);
+//         return res.status(500).json({ success: false, message: "Error fetching user data" });
+//       }
+//       if (!rows?.length) {
+//         return res.status(404).json({ success: false, message: "User not found" });
+//       }
+//       res.json({ success: true, user: rows[0] });
+//     }
+//   );
+// });
+
+
+// Get user ID from email
+app.get("/get-user-id", (req, res) => {
+  const email = req.query.email;
+  if (!email) {
+    return res.status(400).json({ error: "Email is required" });
+  }
+
+  db.query("SELECT id FROM users WHERE email = ?", [email], (err, results) => {
+    if (err) {
+      console.error("Error fetching user ID:", err);
+      return res.status(500).json({ error: "Failed to fetch user ID" });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    res.json({ userId: results[0].id });
+  });
+});
+
+// GET user details by email
+app.get("/get-user-details", (req, res) => {
+  const email = req.query.email;
+  if (!email) {
+    return res.status(400).json({ message: "Email is required" });
+  }
+  console.log(email);
+  const sql = "SELECT fullname, phone FROM users WHERE email = ?";
+  db.query(sql, [email], (err, results) => {
+    if (err) {
+      console.error("Error fetching user details:", err);
+      return res.status(500).json({ message: "Server error" });
+    }
+   if (results.length === 0) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
     const user = results[0];
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ success: false, message: "Invalid email or password" });
-
-    res.json({ success: true, user });
+    res.json({
+      fullname: user.fullname,
+      phone: user.phone,
+      // created_at: user.created_at,
+    });
   });
 });
 
-app.put("/update-profile/:id", (req, res) => {
-  const { name, phone } = req.body;
-  db.query("UPDATE users SET name = ?, phone = ? WHERE id = ?", [name, phone, req.params.id], (err) => {
-    if (err) return res.status(500).json({ success: false, message: "Error updating profile" });
-    res.json({ success: true, message: "Profile updated successfully" });
-  });
+// PUT /update-user-details
+app.put("/update-user-details", async (req, res) => {
+  const { email, fullname, phonenumber } = req.body;
+
+  if (!email || !fullname || !phonenumber) {
+    return res.status(400).json({ error: "Missing required fields" });
+  }
+
+  try {
+    const updateQuery = `
+      UPDATE users
+      SET fullname = ?, phone = ?
+      WHERE email = ?
+    `;
+
+    await db.promise().query(updateQuery, [fullname, phonenumber, email]);
+
+    const [updatedUser] = await db.promise().query(
+      "SELECT email, fullname, phone FROM users WHERE email = ?",
+      [email]
+    );
+  res.json(updatedUser[0]);
+  } catch (error) {
+    console.error("Error updating user details:", error);
+    res.status(500).json({ error: "Failed to update user details" });
+  }
 });
+
 
 // ----------------------
 // CRUD + SAVE ENDPOINTS (Restaurants, Hospitals, Tourist Places, Religious Sites, Events)
@@ -1090,6 +1265,116 @@ app.get("/saved-restaurants/:user_id", (req, res) => {
     res.json({ success: true, results });
   });
 });
+
+// -----------------------------
+// SAVED: EVENTS
+// -----------------------------
+app.post("/save-event", (req, res) => {
+  const {
+    userId,
+    eventId,
+    name,
+    venue,
+    city,
+    country,
+    date,
+    time,
+    latitude,
+    longitude,
+    image,
+    url,
+  } = req.body || {};
+  if (!userId) return res.status(401).json({ error: "User not logged in" });
+  if (!eventId) return res.status(400).json({ error: "Missing event ID" });
+
+  const query = `
+    INSERT INTO saved_events (user_id, event_id, name, venue, city, country, date, time, latitude, longitude, image, url)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ON DUPLICATE KEY UPDATE name=?, venue=?, city=?, country=?, date=?, time=?, latitude=?, longitude=?, image=?, url=?
+  `;
+  db.query(
+    query,
+    [
+      userId,
+      eventId,
+      name || "",
+      venue || "",
+      city || "",
+      country || "",
+      date || null,
+      time || "",
+      latitude || null,
+      longitude || null,
+      image || "",
+      url || "",
+      name || "",
+      venue || "",
+      city || "",
+      country || "",
+      date || null,
+      time || "",
+      latitude || null,
+      longitude || null,
+      image || "",
+      url || "",
+    ],
+    (err) => {
+      if (err) {
+        console.error("Error saving event:", err);
+        return res.status(500).json({ error: "Failed to save event" });
+      }
+      res.json({ success: true, message: "Event saved successfully!" });
+    }
+  );
+});
+
+app.get("/saved-events/:userId", (req, res) => {
+  const userId = req.params.userId;
+  db.query(
+    "SELECT id, event_id, name, venue, city, country, date, time, latitude, longitude, image, url FROM saved_events WHERE user_id = ?",
+    [userId],
+    (err, rows) => {
+      if (err) {
+        console.error("Error fetching saved events:", err);
+        return res.status(500).json({ error: "Failed to fetch saved events" });
+      }
+      res.json(rows || []);
+    }
+  );
+});
+
+app.delete("/delete-event/:id", (req, res) => {
+  const id = req.params.id;
+  db.query("DELETE FROM saved_events WHERE id = ?", [id], (err) => {
+    if (err) {
+      console.error("Error deleting event:", err);
+      return res.status(500).json({ error: "Failed to delete event" });
+    }
+    res.json({ success: true, message: "Event deleted successfully" });
+  });
+});
+
+app.post("/delete-event", (req, res) => {
+  const { userId, eventId } = req.body || {};
+  if (!userId || !eventId) {
+    return res.status(400).json({ message: "Missing required parameters" });
+  }
+  db.query(
+    "DELETE FROM saved_events WHERE user_id = ? AND event_id = ?",
+    [userId, eventId],
+    (err, result) => {
+      if (err) {
+        console.error("Error deleting event:", err);
+        return res.status(500).json({ message: "Error deleting event" });
+      }
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ message: "Event not found" });
+      }
+      res.json({ message: "Event unsaved successfully" });
+    }
+  );
+});
+
 
 // Similar endpoints: hospitals, tourist places, religious sites, events
 // (copy-paste your existing ones here — unchanged)
@@ -1142,6 +1427,60 @@ app.get("/religious-sites", async (req, res) => {
     res.status(500).json({ success: false, message: "Error fetching religious sites" });
   }
 });
+
+// -----------------------------
+// LIVE EVENTS (Ticketmaster)
+// -----------------------------
+app.get("/live-events", async (req, res) => {
+  const { location, date: eventDate } = req.query || {};
+  if (!location || !eventDate) {
+    return res.status(400).json({ error: "Location and date are required" });
+  }
+
+  const ticketmasterAPI = "https://app.ticketmaster.com/discovery/v2/events.json";
+  const params = {
+    apikey: process.env.TICKETMASTER_API_KEY,
+    city: location,
+    startDateTime: `${eventDate}T00:00:00Z`, // ✅ fixed template literal
+    radius: 50,
+    classificationName: "festival,cinema,comedy,music,sports",
+    size: 16,
+    sort: "date,asc",
+  };
+
+  try {
+    const response = await axios.get(ticketmasterAPI, { params });
+    if (response.data._embedded && response.data._embedded.events) {
+      const events = response.data._embedded.events
+        .filter((event) => event.dates?.start?.localDate === eventDate)
+        .map((event) => ({
+          id: event.id,
+          name: event.name,
+          venue: event._embedded?.venues?.[0]?.name || "TBD",
+          address: event._embedded?.venues?.[0]?.address?.line1 || "Address not available",
+          city: event._embedded?.venues?.[0]?.city?.name || "",
+          country: event._embedded?.venues?.[0]?.country?.name || "",
+          date: event.dates?.start?.localDate || "",
+          time: event.dates?.start?.localTime || "TBD",
+          image: event.images?.[0]?.url || "",
+          latitude: event._embedded?.venues?.[0]?.location?.latitude || null,
+          longitude: event._embedded?.venues?.[0]?.location?.longitude || null,
+          url: event.url || "",
+        }));
+      res.json(events);
+    } else {
+      res.json([]);
+    }
+  } catch (error) {
+    console.error("Error fetching events:", error?.response?.data || error.message || error);
+    res.status(500).json({
+      error: "Failed to fetch event data",
+      details: error?.response?.data || error.message,
+    });
+  }
+});
+
+
 
 // ----------------------
 // Start server

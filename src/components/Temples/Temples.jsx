@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import ShareIcon from "@mui/icons-material/Share";
 
-const BASE_URL = "http://localhost:8000";
+const BASE_URL = "https://smart-travel-companion-udlt.onrender.com";
 
 const Temples = ({ location, userid }) => {
   const [sites, setSites] = useState([]);

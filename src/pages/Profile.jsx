@@ -21,12 +21,13 @@ const Profile = () => {
     if (!user?.email) return;
     // console.log(user);
     try {
-      const response = await axios.get("http://localhost:8000/get-user-details", {
+      const response = await axios.get("https://smart-travel-companion-udlt.onrender.com/get-user-details", {
         params: { email: user.email },
       });
-      setUserData(response.data.user);
-      setFullName(response.data.user.full_name || "");
-      setPhoneNumber(response.data.user.phone_number || "");
+      
+      setUserData(response.data);
+      setFullName(response.data.fullname || "");
+      setPhoneNumber(response.data.phone || "");
     } catch (error) {
       console.error("Failed to fetch user details:", error);
     }
@@ -40,13 +41,13 @@ const Profile = () => {
     logout();
     navigate("/");
   };
-
+  // console.log(userData);
   const handleUpdate = async () => {
     try {
       await axios.put("https://smart-travel-companion-udlt.onrender.com/update-user-details", {
         email: user.email,
-        full_name: fullName,
-        phone_number: phoneNumber,
+        fullname: fullName,
+        phonenumber: phoneNumber,
       });
       setEditingField(null);
       await fetchUserDetails();
@@ -136,7 +137,7 @@ const Profile = () => {
               </>
             ) : (
               <>
-                <span style={{ marginLeft: "10px" }}>{userData?.full_name || "Loading..."}</span>
+                <span style={{ marginLeft: "10px" }}>{userData?.fullname || "Loading..."}</span>
                 <Pencil
                   size={18}
                   style={{ marginLeft: "8px", cursor: "pointer", color: "#555" }}
@@ -174,7 +175,7 @@ const Profile = () => {
               </>
             ) : (
               <>
-                <span style={{ marginLeft: "10px" }}>{userData?.phone_number || "Loading..."}</span>
+                <span style={{ marginLeft: "10px" }}>{userData?.phone || "Loading..."}</span>
                 <Pencil
                   size={18}
                   style={{ marginLeft: "8px", cursor: "pointer", color: "#555" }}
