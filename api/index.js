@@ -429,69 +429,90 @@ app.put("/update-user-details", async (req, res) => {
 // ----------------------
 // 👉 For brevity, I’ll keep the structure identical to what you had: INSERT, GET by user_id
 
+// Save a restaurant
 app.post("/save-restaurant", (req, res) => {
   const { user_id, restaurantId, name, address, photo, latitude, longitude } = req.body;
+
+  if (!user_id || !restaurantId || !name) {
+    return res.status(400).json({ error: "Missing required fields" });
+  }
 
   const query = `
     INSERT INTO saved_restaurants (user_id, restaurant_id, name, address, photo, latitude, longitude)
     VALUES (?, ?, ?, ?, ?, ?, ?)
-    ON DUPLICATE KEY UPDATE name=?, address=?, photo=?, latitude=?, longitude=?
+    ON DUPLICATE KEY UPDATE 
+      name = VALUES(name), 
+      address = VALUES(address), 
+      photo = VALUES(photo), 
+      latitude = VALUES(latitude), 
+      longitude = VALUES(longitude)
   `;
+
   db.query(
     query,
     [
       user_id,
       restaurantId,
       name,
-      address,
-      photo,
-      latitude,
-      longitude
+      address || "",
+      photo || "",
+      latitude || null,
+      longitude || null,
     ],
     (err, result) => {
       if (err) {
         console.error("Error saving restaurant:", err);
         return res.status(500).json({ error: "Failed to save restaurant" });
       }
-      res.status(200).json({ message: "Restaurant saved successfully!" });
-      }
+      res.status(200).json({ success: true, message: "Restaurant saved successfully!" });
+    }
   );
 });
 
 
+// Get all saved restaurants for a user
 app.get("/saved-restaurants/:user_id", (req, res) => {
   const userId = req.params.user_id;
+
   db.query("SELECT * FROM saved_restaurants WHERE user_id = ?", [userId], (err, results) => {
     if (err) {
       console.error("Error fetching saved restaurants:", err);
       return res.status(500).json({ error: "Failed to fetch saved restaurants" });
     }
-    // Send array directly (frontend expects an array now)
-    res.json(results || []);
+    res.json(results || []); // frontend expects an array
   });
 });
 
 
+// Delete a saved restaurant
 app.post("/delete-restaurant", (req, res) => {
   const { user_id, restaurantId } = req.body;
+
   if (!user_id || !restaurantId) {
     return res.status(400).json({ message: "Missing user_id or restaurantId" });
   }
-  db.query(
-    "DELETE FROM saved_restaurants WHERE user_id = ? AND (restaurant_id = ? OR id = ? OR place_id = ?)",
-    [user_id, restaurantId, restaurantId, restaurantId],
-    (err, result) => {
-      if (err) {
-        console.error("Error deleting saved restaurant:", err);
-        return res.status(500).json({ error: "Failed to delete saved restaurant" });
-      }
-      if (result.affectedRows === 0) {
-        return res.status(404).json({ message: "Saved restaurant not found" });
-      }
-      res.json({ success: true, message: "Restaurant unsaved" });
+
+  // Adjust this query depending on your table structure
+  const query = `
+    DELETE FROM saved_restaurants 
+    WHERE user_id = ? 
+    AND restaurant_id = ?
+  `;
+
+  db.query(query, [user_id, restaurantId], (err, result) => {
+    if (err) {
+      console.error("Error deleting saved restaurant:", err);
+      return res.status(500).json({ error: "Failed to delete saved restaurant" });
     }
-  );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "Saved restaurant not found" });
+    }
+
+    res.json({ success: true, message: "Restaurant unsaved" });
+  });
 });
+
 
 // -----------------------------
 // SAVED: EVENTS
