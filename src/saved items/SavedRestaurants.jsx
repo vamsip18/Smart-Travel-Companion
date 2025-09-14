@@ -70,7 +70,9 @@ const SavedRestaurants = () => {
 Google Maps: https://www.google.com/maps/search/?api=1&query=${lat || ""},${lng || ""}`;
     const shareData = { title: restaurant.name, text: shareText };
     if (navigator.share) {
-      navigator.share(shareData).catch((err) => console.error("Share error:", err));
+      navigator.share(shareData).catch((err) =>
+        console.error("Share error:", err)
+      );
     } else {
       // fallback - copy to clipboard (best-effort)
       navigator.clipboard?.writeText(shareText).then(() => {
