@@ -916,14 +916,35 @@ const shuffleArray = (array) => {
 };
 
 const fallbackImages = {
-  restaurant: shuffleArray(Array.from({ length: 16 }, (_, i) => `/assets/images/restau/r${i + 1}.jpeg`)),
-  hospital: shuffleArray(Array.from({ length: 20 }, (_, i) => `/assets/images/hospitals/h${i + 1}.jpeg`)),
-  "tourist attraction": shuffleArray(Array.from({ length: 16 }, (_, i) => `/assets/images/TouristPlaces/tourist${i + 1}.jpg`)),
-  temple: shuffleArray(Array.from({ length: 16 }, (_, i) => `/assets/images/Temples/Temple${i + 1}.jpg`)),
-  church: shuffleArray(Array.from({ length: 16 }, (_, i) => `/assets/images/churches/church${i + 1}.jpg`)),
-  mosque: shuffleArray(Array.from({ length: 16 }, (_, i) => `/assets/images/Mosques/mosque${i + 1}.jpg`)),
-  default: shuffleArray(Array.from({ length: 16 }, (_, i) => `/assets/images/Temples/Temple${i + 1}.jpg`)),
+  restaurant: shuffleArray(
+    Array.from({ length: 16 }, (_, i) => {
+      const ext = i + 1 <= 8 ? "jpeg" : "jpg";
+      return `/assets/images/restau/r${i + 1}.${ext}`;
+    })
+  ),
+  hospital: shuffleArray(
+    Array.from({ length: 20 }, (_, i) => {
+      const ext = i + 1 <= 13 ? "jpeg" : "jpg";
+      return `/assets/images/hospitals/h${i + 1}.${ext}`;
+    })
+  ),
+  "tourist attraction": shuffleArray(
+    Array.from({ length: 16 }, (_, i) => `/assets/images/TouristPlaces/tourist${i + 1}.jpg`)
+  ),
+  temple: shuffleArray(
+    Array.from({ length: 16 }, (_, i) => `/assets/images/Temples/Temple${i + 1}.jpg`)
+  ),
+  church: shuffleArray(
+    Array.from({ length: 16 }, (_, i) => `/assets/images/churches/church${i + 1}.jpg`)
+  ),
+  mosque: shuffleArray(
+    Array.from({ length: 16 }, (_, i) => `/assets/images/Mosques/mosque${i + 1}.jpg`)
+  ),
+  default: shuffleArray(
+    Array.from({ length: 16 }, (_, i) => `/assets/images/Temples/Temple${i + 1}.jpg`)
+  ),
 };
+
 
 // ----------------------
 // Fixed Static Fallback (round-robin, no repeats)
