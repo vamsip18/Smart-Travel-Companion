@@ -21,10 +21,10 @@ const PORT = process.env.PORT || 8000;
 // Database
 // ----------------------
 let db = mysql.createConnection({
-  host: "centerbeam.proxy.rlwy.net",
-  port: 11532,
+  host: "mysql.railway.internal",
+  port: 3306,
   user: "root",
-  password: "SbviylOEGnApTAOmpxjZbKOEEasXPCLU",
+  password: "tGZCWPmxlBMbfdtrgatwEgFtQOrzkIVN",
   database: "railway",
   multipleStatements: true,
 });
