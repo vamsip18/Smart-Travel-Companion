@@ -48,10 +48,12 @@ app.use(
       "http://localhost:8000",
       "http://localhost:5173",
     ],
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     credentials: true,
   })
 );
+
+app.options("*", cors());
 
 // Serve static images so that paths like /assets/images/restau/r1.jpeg work.
 // Mounting `public` at /assets: so /assets/images/... maps to ./public/images/...
